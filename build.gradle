@@ -1,0 +1,52 @@
+plugins {
+    id 'org.springframework.boot' version '2.5.2'
+    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+    id 'java'
+}
+
+allprojects {
+    apply plugin: 'java'
+
+    group 'org.example'
+    version '1.0-SNAPSHOT'
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        //Lombok
+        implementation 'org.projectlombok:lombok'
+
+        annotationProcessor('org.projectlombok:lombok')
+        testAnnotationProcessor('org.projectlombok:lombok')
+
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+        testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+    }
+
+    test {
+        useJUnitPlatform()
+    }
+}
+
+project(':Ticker-Collector') {
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
+
+    dependencies {
+        //WebFlux
+        implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+        //JsonPath
+        implementation 'com.jayway.jsonpath:json-path:2.6.0'
+
+        //MySQL
+        implementation 'mysql:mysql-connector-java'
+
+        //JPA
+        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    }
+}
+
