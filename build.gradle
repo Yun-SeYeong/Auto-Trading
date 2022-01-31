@@ -7,7 +7,7 @@ plugins {
 allprojects {
     apply plugin: 'java'
 
-    group 'org.example'
+    group 'demo.coin'
     version '1.0-SNAPSHOT'
 
     repositories {
