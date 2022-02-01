@@ -25,6 +25,8 @@ public class CoinHistory {
 
     private double openingPrice;
 
+    private double closingPrice;
+
     private double minPrice;
 
     private double maxPrice;
