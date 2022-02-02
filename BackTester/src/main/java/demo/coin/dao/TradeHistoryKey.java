@@ -10,7 +10,7 @@ import java.time.LocalDate;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CoinHistoryKey implements Serializable {
+public class TradeHistoryKey implements Serializable {
     private LocalDate createdTime;
     private String name;
 }
