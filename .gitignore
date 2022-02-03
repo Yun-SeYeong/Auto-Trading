@@ -4,4 +4,6 @@
 */build/
 
 *.log
+.gz
 /log
+key/

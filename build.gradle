@@ -57,6 +57,15 @@ project(':BackTester') {
     dependencies {
         implementation(project(':Ticker-Collector'))
 
+        //Auth0
+        implementation 'com.auth0:java-jwt:3.18.3'
+
+        //HttpClient
+        implementation 'org.apache.httpcomponents:httpclient'
+
+        //WebFlux
+        implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
         //MySQL
         implementation 'mysql:mysql-connector-java'
 
