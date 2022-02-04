@@ -133,8 +133,8 @@ public class BackTester {
 
     @Test
     void getBalance() {
-        String accessKey = "dPqjPTmcluZqUGGkQxwOZtNrnlHPCiAMOk3S2z6s";
-        String secretKey = "7C6CrYWkxnxnMSIGoig8UNgJ3EDQB47eituYU0Bj";
+        String accessKey = "발급받은 Access key";
+        String secretKey = "발급받은 Secret key";
         String serverUrl = "https://api.upbit.com";
 
         Algorithm algorithm = Algorithm.HMAC256(secretKey);
