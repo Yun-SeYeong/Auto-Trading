@@ -2,6 +2,7 @@ package demo.coin;
 
 import com.jayway.jsonpath.JsonPath;
 import demo.coin.dao.CoinHistory;
+import demo.coin.dao.CoinHistoryKey;
 import demo.coin.repository.CoinHistoryRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -13,9 +14,7 @@ import reactor.core.publisher.Mono;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @SpringBootTest
 @Slf4j
@@ -105,28 +104,33 @@ public class CollectTest {
                         .bodyToMono(String.class);
 
                 String coins = coinsMono.block();
-                System.out.println("coins = " + coins);
+//                System.out.println("coins = " + coins);
 
                 List<List<?>> coinList = JsonPath.read(coins, "$.data");
 
-                System.out.println("coinList.get(0).get(0) = " + Double.parseDouble(coinList.get(0).get(0).toString()));
-                System.out.println("time"
-                        + Instant.ofEpochMilli((Long) coinList.get(0).get(0)).atZone(ZoneId.systemDefault()).toLocalDate());
+                List<CoinHistoryKey> coinHistoryKeyList = new ArrayList<>();
 
                 for (List<?> coinDayHistory : coinList) {
-                    CoinHistory coinHistory = CoinHistory.builder()
+                    Optional<CoinHistory> coinHistoryOptional = coinHistoryRepository.findById(CoinHistoryKey.builder()
                             .name(coinName)
                             .createdTime(Instant.ofEpochMilli((Long) coinDayHistory.get(0)).atZone(ZoneId.systemDefault()).toLocalDate())
-                            .openingPrice(Double.parseDouble(coinDayHistory.get(1).toString()))
-                            .closingPrice(Double.parseDouble(coinDayHistory.get(2).toString()))
-                            .maxPrice(Double.parseDouble(coinDayHistory.get(3).toString()))
-                            .minPrice(Double.parseDouble(coinDayHistory.get(4).toString()))
-                            .unitsTraded24H(Double.parseDouble(coinDayHistory.get(5).toString()))
-                            .build();
+                            .build());
 
-                    System.out.println("coinHistory = " + coinHistory);
+                    if (coinHistoryOptional.isEmpty()){
+                        CoinHistory coinHistory = CoinHistory.builder()
+                                .name(coinName)
+                                .createdTime(Instant.ofEpochMilli((Long) coinDayHistory.get(0)).atZone(ZoneId.systemDefault()).toLocalDate())
+                                .openingPrice(Double.parseDouble(coinDayHistory.get(1).toString()))
+                                .closingPrice(Double.parseDouble(coinDayHistory.get(2).toString()))
+                                .maxPrice(Double.parseDouble(coinDayHistory.get(3).toString()))
+                                .minPrice(Double.parseDouble(coinDayHistory.get(4).toString()))
+                                .unitsTraded24H(Double.parseDouble(coinDayHistory.get(5).toString()))
+                                .build();
 
-                    coinHistoryRepository.save(coinHistory);
+                        System.out.println("coinHistory = " + coinHistory);
+
+                        coinHistoryRepository.save(coinHistory);
+                    }
                 }
             }
             log.info("진행도: " + i + "/" + total + " [" + (((double) i/total)*100) + "%]");
