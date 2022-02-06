@@ -71,6 +71,12 @@ project(':BackTester') {
 
         //JPA
         implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+        //Spring Boot Test
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+        //Gson
+        implementation 'com.google.code.gson:gson'
     }
 
 }
