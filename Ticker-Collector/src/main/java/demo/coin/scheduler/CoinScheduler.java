@@ -56,7 +56,7 @@ public class CoinScheduler {
                     .text("[COLLECT] COIN:" + marketName + " (" + i + "/" + marketNames.size() + ")[" + ((int) (((double) i/marketNames.size())*100)) + "%]")
                     .build());
 
-            List<DayCandle> dayCandleList = objectMapper.readValue(candles, new TypeReference<>() {});
+            List<DayCandle> dayCandleList = objectMapper.readValue(candles, new TypeReference<List<DayCandle>>() {});
 
             dayCandleList.remove(dayCandleList.get(0));
 
