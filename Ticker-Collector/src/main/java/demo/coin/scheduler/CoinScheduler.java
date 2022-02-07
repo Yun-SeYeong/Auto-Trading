@@ -98,51 +98,53 @@ public class CoinScheduler {
         LocalDate lastDay = LocalDate.now().minusDays(1);
 //        System.out.println("date = " + lastDay);
 
-        int money = getKRW();
-        money = money > 10000 ? money - 10000 : 0;
-
         List<MarketOrder> marketOrderList = marketOrderRepository.findAllByCandleDateTimeUtc(lastDay.atStartOfDay());
 
-        Map<String, BigDecimal> targetMap = new HashMap<>();
+        if (marketOrderList.size() > 0) {
+            int money = getKRW();
+            money = money > 10000 ? money - 10000 : 0;
 
-        Mono<String> orderbookMono = client.get()
-                .uri(uriBuilder -> {
-                    UriBuilder builder = uriBuilder
-                            .path("/orderbook");
-                    for (MarketOrder marketOrder : marketOrderList) {
-                        System.out.println("marketOrder = " + marketOrder);
-                        builder.queryParam("markets", marketOrder.getMarket());
-                        targetMap.put(marketOrder.getMarket(), marketOrder.getTargetPrice());
-                    }
-                    return builder.build();
-                })
-                .header("Accept", "application/json")
-                .retrieve()
-                .bodyToMono(String.class);
+            Map<String, BigDecimal> targetMap = new HashMap<>();
 
-        String orderBook = orderbookMono.block();
+            Mono<String> orderbookMono = client.get()
+                    .uri(uriBuilder -> {
+                        UriBuilder builder = uriBuilder
+                                .path("/orderbook");
+                        for (MarketOrder marketOrder : marketOrderList) {
+                            System.out.println("marketOrder = " + marketOrder);
+                            builder.queryParam("markets", marketOrder.getMarket());
+                            targetMap.put(marketOrder.getMarket(), marketOrder.getTargetPrice());
+                        }
+                        return builder.build();
+                    })
+                    .header("Accept", "application/json")
+                    .retrieve()
+                    .bodyToMono(String.class);
 
-        List<Orderbook> orderbookList = objectMapper.readValue(orderBook, new TypeReference<List<Orderbook>>() {});
+            String orderBook = orderbookMono.block();
 
-        for (Orderbook ob : orderbookList) {
+            List<Orderbook> orderbookList = objectMapper.readValue(orderBook, new TypeReference<List<Orderbook>>() {});
+
+            for (Orderbook ob : orderbookList) {
 //            System.out.println("orderbook = " + ob);
 
-            Orderbook.OrderbookUnit unit = ob.getOrderbookUnits().get(ob.getOrderbookUnits().size()-1);
+                Orderbook.OrderbookUnit unit = ob.getOrderbookUnits().get(ob.getOrderbookUnits().size()-1);
 
 //            System.out.println("unit = " + ob.getMarket());
 //            System.out.println("unit.getBidSize() = " + unit.getBidPrice());
 //            System.out.println("targetMap.get(ob.getMarket()) = " + targetMap.get(ob.getMarket()));
 
-            String coinName = ob.getMarket().replace("KRW-", "");
+                String coinName = ob.getMarket().replace("KRW-", "");
 
-            if (unit.getBidPrice().compareTo(targetMap.get(ob.getMarket())) > 0 && money > 0 && !checkCoin(coinName)) {
-                System.out.println("[매수] ob.getMarket() = " + ob.getMarket());
+                if (unit.getBidPrice().compareTo(targetMap.get(ob.getMarket())) > 0 && money > 0 && !checkCoin(coinName)) {
+                    System.out.println("[매수] ob.getMarket() = " + ob.getMarket());
 
-                sendSlackHook(SlackMessage.builder()
-                        .text("[매수] Coin: " + ob.getMarket() + " Target: " + targetMap.get(ob.getMarket()))
-                        .build());
+                    sendSlackHook(SlackMessage.builder()
+                            .text("[매수] Coin: " + ob.getMarket() + " Target: " + targetMap.get(ob.getMarket()))
+                            .build());
 
-                buyCoin(ob.getMarket(), "5000");
+                    buyCoin(ob.getMarket(), "5000");
+                }
             }
         }
     }
