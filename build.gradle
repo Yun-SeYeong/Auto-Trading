@@ -36,6 +36,12 @@ project(':Ticker-Collector') {
     apply plugin: 'io.spring.dependency-management'
 
     dependencies {
+        //Auth0
+        implementation 'com.auth0:java-jwt:3.18.3'
+
+        //HttpClient
+        implementation 'org.apache.httpcomponents:httpclient'
+
         //WebFlux
         implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
@@ -47,6 +53,12 @@ project(':Ticker-Collector') {
 
         //JPA
         implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+        //Gson
+        implementation 'com.google.code.gson:gson'
+
+        //Spring Boot Test
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
     }
 }
 

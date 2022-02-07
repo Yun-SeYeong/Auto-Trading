@@ -1,19 +1,32 @@
 package demo.coin;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import demo.coin.dao.*;
+import demo.coin.dto.Balance;
+import demo.coin.dto.Orderbook;
 import demo.coin.repository.CoinHistoryRepository;
 import demo.coin.repository.DayCandleRepository;
 import demo.coin.repository.MarketOrderRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.util.UriBuilder;
 import reactor.core.publisher.Mono;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -36,6 +49,9 @@ public class CollectTest {
 
     @Autowired
     ObjectMapper objectMapper;
+
+    private final String accessKey = "dPqjPTmcluZqUGGkQxwOZtNrnlHPCiAMOk3S2z6s";
+    private final String secretKey = "7C6CrYWkxnxnMSIGoig8UNgJ3EDQB47eituYU0Bj";
 
     @Test
     String getTickerTest() {
@@ -62,6 +78,117 @@ public class CollectTest {
             System.out.println("name = " + name);
         }
         return names;
+    }
+
+    @Test
+    void checkMarket() throws JsonProcessingException {
+        WebClient client = WebClient.create("https://api.upbit.com/v1");
+
+        LocalDate lastDay = LocalDate.now().minusDays(1);
+        System.out.println("date = " + lastDay);
+
+        List<MarketOrder> marketOrderList = marketOrderRepository.findAllByCandleDateTimeUtc(lastDay.atStartOfDay());
+
+        Map<String, BigDecimal> targetMap = new HashMap<>();
+
+        Mono<String> orderbookMono = client.get()
+                .uri(uriBuilder -> {
+                    UriBuilder builder = uriBuilder
+                            .path("/orderbook");
+                    for (MarketOrder marketOrder : marketOrderList) {
+                        System.out.println("marketOrder = " + marketOrder);
+                        builder.queryParam("markets", marketOrder.getMarket());
+                        targetMap.put(marketOrder.getMarket(), marketOrder.getTargetPrice());
+                    }
+                    return builder.build();
+                })
+                .header("Accept", "application/json")
+                .retrieve()
+                .bodyToMono(String.class);
+
+        String orderBook = orderbookMono.block();
+
+        List<Orderbook> orderbookList = objectMapper.readValue(orderBook, new TypeReference<>() {});
+
+        for (Orderbook ob : orderbookList) {
+            System.out.println("orderbook = " + ob);
+
+            Orderbook.OrderbookUnit unit = ob.getOrderbookUnits().get(ob.getOrderbookUnits().size()-1);
+
+            System.out.println("unit = " + ob.getMarket());
+            System.out.println("unit.getBidSize() = " + unit.getBidPrice());
+            System.out.println("targetMap.get(ob.getMarket()) = " + targetMap.get(ob.getMarket()));
+
+            if (unit.getBidPrice().compareTo(targetMap.get(ob.getMarket())) > 0) {
+                System.out.println("[매수] ob.getMarket() = " + ob.getMarket());
+
+
+            }
+        }
+    }
+
+    String getAuthenticationToken() {
+        Algorithm algorithm = Algorithm.HMAC256(secretKey);
+        String jwtToken = JWT.create()
+                .withClaim("access_key", accessKey)
+                .withClaim("nonce", UUID.randomUUID().toString())
+                .sign(algorithm);
+
+        return "Bearer " + jwtToken;
+    }
+
+    @Test
+    void checkWallet() throws Exception {
+        getWallet();
+    }
+
+    @Test
+    void checkKRW() throws Exception {
+        System.out.println("getKRW() = " + getKRW());
+    }
+    
+    int getKRW() throws Exception {
+        List<Balance> balanceList = getWallet();
+        
+        int money = 0;
+        
+        for (Balance balance : balanceList) {
+            if (balance.getCurrency().equals("KRW")) {
+                money = (int) Double.parseDouble(balance.getBalance());
+            }
+        }
+        return money;
+    }
+    
+    List<Balance> getWallet() throws Exception {
+        System.out.println("CollectTest.getBalance");
+        String serverUrl = "https://api.upbit.com";
+
+        String authenticationToken = getAuthenticationToken();
+
+        try {
+            CloseableHttpClient client = HttpClientBuilder.create().build();
+            HttpGet request = new HttpGet(serverUrl + "/v1/accounts");
+            request.setHeader("Content-Type", "application/json");
+            request.addHeader("Authorization", authenticationToken);
+
+            HttpResponse response = client.execute(request);
+            HttpEntity entity = response.getEntity();
+
+            String responseJson = EntityUtils.toString(entity, "UTF-8");
+
+            System.out.println(response.getStatusLine());
+            System.out.println(responseJson);
+
+            List<Balance> balanceList = objectMapper.readValue(responseJson, new TypeReference<List<Balance>>() {});
+            System.out.println("balanceList = " + balanceList);
+
+            return balanceList;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        throw new Exception("자산정보를 조회할 수 없습니다.");
     }
 
     @Test
@@ -189,7 +316,7 @@ public class CollectTest {
 
         System.out.println("candleList = " + candleList);
 
-        int limit = 5;
+        int limit = 10;
 
         for (int i = 0; i < limit; i++) {
             MarketOrder order = MarketOrder.builder()
