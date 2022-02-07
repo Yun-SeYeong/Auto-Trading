@@ -2,9 +2,9 @@ package demo.coin;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import com.jayway.jsonpath.JsonPath;
 import demo.coin.dao.*;
 import demo.coin.dto.Balance;
@@ -15,7 +15,10 @@ import demo.coin.repository.MarketOrderRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
@@ -28,6 +31,8 @@ import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.security.MessageDigest;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -81,11 +86,14 @@ public class CollectTest {
     }
 
     @Test
-    void checkMarket() throws JsonProcessingException {
+    void checkMarket() throws Exception {
         WebClient client = WebClient.create("https://api.upbit.com/v1");
 
         LocalDate lastDay = LocalDate.now().minusDays(1);
         System.out.println("date = " + lastDay);
+
+        int money = getKRW();
+        money = money > 10000 ? money - 10000 : 0;
 
         List<MarketOrder> marketOrderList = marketOrderRepository.findAllByCandleDateTimeUtc(lastDay.atStartOfDay());
 
@@ -119,12 +127,92 @@ public class CollectTest {
             System.out.println("unit.getBidSize() = " + unit.getBidPrice());
             System.out.println("targetMap.get(ob.getMarket()) = " + targetMap.get(ob.getMarket()));
 
-            if (unit.getBidPrice().compareTo(targetMap.get(ob.getMarket())) > 0) {
+            if (unit.getBidPrice().compareTo(targetMap.get(ob.getMarket())) > 0 && money > 0) {
                 System.out.println("[매수] ob.getMarket() = " + ob.getMarket());
 
 
             }
         }
+    }
+
+    @Test
+    void sellAllCoin() throws Exception{
+        List<Balance> balanceList = getWallet();
+
+        for (Balance balance : balanceList) {
+            if (!balance.getCurrency().equals("KRW")) {
+                System.out.println("balance = " + balance);
+
+                HashMap<String, String> params = new HashMap<>();
+                params.put("market", "KRW-" + balance.getCurrency());
+                params.put("side", "ask");
+                params.put("volume", balance.getBalance());
+                params.put("ord_type", "market");
+
+                orderCoin(params);
+            }
+        }
+    }
+
+    @Test
+    void buyBTC() throws Exception {
+        buyCoin("KRW-BTC", "5000");
+    }
+
+    @Test
+    void buyCoin(String market, String money) throws Exception {
+        HashMap<String, String> params = new HashMap<>();
+        params.put("market", market);
+        params.put("side", "bid");
+        params.put("price", money);
+        params.put("ord_type", "price");
+
+        orderCoin(params);
+    }
+
+    @Test
+    void orderCoin(HashMap<String, String> params) throws Exception {
+        String serverUrl = "https://api.upbit.com";
+        try {
+            HttpClient client = HttpClientBuilder.create().build();
+            HttpPost request = new HttpPost(serverUrl + "/v1/orders");
+            request.setHeader("Content-Type", "application/json");
+            request.addHeader("Authorization", getAuthenticationTokenWithParam(params));
+            request.setEntity(new StringEntity(new Gson().toJson(params)));
+
+            HttpResponse response = client.execute(request);
+            HttpEntity entity = response.getEntity();
+
+            System.out.println(EntityUtils.toString(entity, "UTF-8"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    String getQueryString(HashMap<String, String> params) {
+        ArrayList<String> queryElements = new ArrayList<>();
+        for(Map.Entry<String, String> entity : params.entrySet()) {
+            queryElements.add(entity.getKey() + "=" + entity.getValue());
+        }
+
+        return String.join("&", queryElements.toArray(new String[0]));
+    }
+
+    String getAuthenticationTokenWithParam(HashMap<String, String> params) throws Exception {
+        MessageDigest md = MessageDigest.getInstance("SHA-512");
+        md.update(getQueryString(params).getBytes("UTF-8"));
+
+        String queryHash = String.format("%0128x", new BigInteger(1, md.digest()));
+
+        Algorithm algorithm = Algorithm.HMAC256(secretKey);
+        String jwtToken = JWT.create()
+                .withClaim("access_key", accessKey)
+                .withClaim("nonce", UUID.randomUUID().toString())
+                .withClaim("query_hash", queryHash)
+                .withClaim("query_hash_alg", "SHA512")
+                .sign(algorithm);
+
+        return "Bearer " + jwtToken;
     }
 
     String getAuthenticationToken() {
@@ -145,6 +233,22 @@ public class CollectTest {
     @Test
     void checkKRW() throws Exception {
         System.out.println("getKRW() = " + getKRW());
+    }
+    
+    @Test
+    void checkCoinExist() throws Exception {
+        System.out.println("checkCoin(\"BTC\") = " + checkCoin("BTC"));
+    }
+
+    boolean checkCoin(String coin) throws Exception {
+        boolean isExist = false;
+        for (Balance balance : getWallet()) {
+            if (balance.getCurrency().equals(coin)) {
+                isExist = true;
+                break;
+            }
+        }
+        return isExist;
     }
     
     int getKRW() throws Exception {
