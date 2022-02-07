@@ -122,7 +122,7 @@ public class CoinScheduler {
 
         String orderBook = orderbookMono.block();
 
-        List<Orderbook> orderbookList = objectMapper.readValue(orderBook, new TypeReference<>() {});
+        List<Orderbook> orderbookList = objectMapper.readValue(orderBook, new TypeReference<List<Orderbook>>() {});
 
         for (Orderbook ob : orderbookList) {
 //            System.out.println("orderbook = " + ob);
