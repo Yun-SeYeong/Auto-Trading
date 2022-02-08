@@ -62,7 +62,7 @@ public class CoinScheduler {
 
         System.out.println("candleList = " + candleList);
 
-        int limit = 5;
+        int limit = 10;
 
         for (int i = 0; i < limit; i++) {
             MarketOrder order = MarketOrder.builder()
@@ -75,6 +75,9 @@ public class CoinScheduler {
                     .build();
 
             System.out.println("order = " + order);
+            sendSlackHook(SlackMessage.builder()
+                    .text("[주문 생성] " + order)
+                    .build());
 
             marketOrderRepository.save(order);
         }
