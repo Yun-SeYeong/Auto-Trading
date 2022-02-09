@@ -151,7 +151,7 @@ public class CoinScheduler {
 
                     if (unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(1.05))) > 0 && checkCoin(coinName)) {
                         sendSlackHook(SlackMessage.builder()
-                                .text("[매도] Coin: " + ob.getMarket() + " Target: " + targetMap.get(ob.getMarket()))
+                                .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice())
                                 .build());
 
                         sellCoin(ob.getMarket());
@@ -159,7 +159,7 @@ public class CoinScheduler {
 
                     if (unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(0.98))) < 0 && checkCoin(coinName)) {
                         sendSlackHook(SlackMessage.builder()
-                                .text("[매도] Coin: " + ob.getMarket() + " Target: " + targetMap.get(ob.getMarket()))
+                                .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice())
                                 .build());
 
                         sellCoin(ob.getMarket());
