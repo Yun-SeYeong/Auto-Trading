@@ -70,7 +70,7 @@ public class CoinScheduler {
                     .candleDateTimeUtc(candleList.get(i).getCandleDateTimeUtc())
                     .targetPrice((candleList.get(i).getHighPrice()
                             .subtract(candleList.get(i).getLowPrice()))
-                            .multiply(new BigDecimal("0.6"))
+                            .multiply(new BigDecimal("0.5"))
                             .add(candleList.get(i).getTradePrice()))
                     .build();
 
