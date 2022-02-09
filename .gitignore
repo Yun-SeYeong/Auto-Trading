@@ -4,6 +4,6 @@
 */build/
 
 *.log
-.gz
+*.gz
 /log
 key/

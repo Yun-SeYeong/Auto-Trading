@@ -315,6 +315,27 @@ public class CollectTest {
     }
 
     @Test
+    void sellCoinByMarketName() throws Exception {
+        sellCoin("KRW-WEMIX");
+    }
+
+    void sellCoin(String market) throws Exception {
+        List<Balance> balanceList = getWallet();
+
+        for (Balance balance : balanceList) {
+            if (("KRW-" + balance.getCurrency()).equals(market)) {
+                HashMap<String, String> params = new HashMap<>();
+                params.put("market", market);
+                params.put("side", "ask");
+                params.put("volume", balance.getBalance());
+                params.put("ord_type", "market");
+
+                orderCoin(params);
+            }
+        }
+    }
+
+    @Test
     void saveCoins() {
         String json = getTickerTest();
 

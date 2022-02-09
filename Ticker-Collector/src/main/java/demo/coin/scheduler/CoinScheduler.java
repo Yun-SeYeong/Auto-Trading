@@ -104,49 +104,66 @@ public class CoinScheduler {
         List<MarketOrder> marketOrderList = marketOrderRepository.findAllByCandleDateTimeUtc(lastDay.atStartOfDay());
 
         if (marketOrderList.size() > 0) {
-            int money = getKRW();
+            List<Balance> balanceList = getWallet();
+
+            int money = getKRWByBalances(balanceList);
             money = money > 10000 ? money - 10000 : 0;
 
-            Map<String, BigDecimal> targetMap = new HashMap<>();
+            if (money > 0) {
+                Map<String, MarketOrder> targetMap = new HashMap<>();
 
-            Mono<String> orderbookMono = client.get()
-                    .uri(uriBuilder -> {
-                        UriBuilder builder = uriBuilder
-                                .path("/orderbook");
-                        for (MarketOrder marketOrder : marketOrderList) {
-                            System.out.println("marketOrder = " + marketOrder);
-                            builder.queryParam("markets", marketOrder.getMarket());
-                            targetMap.put(marketOrder.getMarket(), marketOrder.getTargetPrice());
-                        }
-                        return builder.build();
-                    })
-                    .header("Accept", "application/json")
-                    .retrieve()
-                    .bodyToMono(String.class);
+                Mono<String> orderbookMono = client.get()
+                        .uri(uriBuilder -> {
+                            UriBuilder builder = uriBuilder
+                                    .path("/orderbook");
+                            for (MarketOrder marketOrder : marketOrderList) {
+                                System.out.println("marketOrder = " + marketOrder);
+                                builder.queryParam("markets", marketOrder.getMarket());
+                                targetMap.put(marketOrder.getMarket(), marketOrder);
+                            }
+                            return builder.build();
+                        })
+                        .header("Accept", "application/json")
+                        .retrieve()
+                        .bodyToMono(String.class);
 
-            String orderBook = orderbookMono.block();
+                String orderBook = orderbookMono.block();
 
-            List<Orderbook> orderbookList = objectMapper.readValue(orderBook, new TypeReference<List<Orderbook>>() {});
+                List<Orderbook> orderbookList = objectMapper.readValue(orderBook, new TypeReference<List<Orderbook>>() {});
 
-            for (Orderbook ob : orderbookList) {
-//            System.out.println("orderbook = " + ob);
+                for (Orderbook ob : orderbookList) {
+                    Orderbook.OrderbookUnit unit = ob.getOrderbookUnits().get(0);
 
-                Orderbook.OrderbookUnit unit = ob.getOrderbookUnits().get(ob.getOrderbookUnits().size()-1);
+                    String coinName = ob.getMarket().replace("KRW-", "");
 
-//            System.out.println("unit = " + ob.getMarket());
-//            System.out.println("unit.getBidSize() = " + unit.getBidPrice());
-//            System.out.println("targetMap.get(ob.getMarket()) = " + targetMap.get(ob.getMarket()));
+                    if (unit.getAskPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice()) > 0
+                            && !checkCoin(coinName)
+                            && targetMap.get(ob.getMarket()).getBuyTime() == null) {
 
-                String coinName = ob.getMarket().replace("KRW-", "");
+                        sendSlackHook(SlackMessage.builder()
+                                .text("[매수] Coin: " + ob.getMarket() + " Target: " + targetMap.get(ob.getMarket()))
+                                .build());
 
-                if (unit.getBidPrice().compareTo(targetMap.get(ob.getMarket())) > 0 && money > 0 && !checkCoin(coinName)) {
-                    System.out.println("[매수] ob.getMarket() = " + ob.getMarket());
+                        buyCoin(ob.getMarket(), String.valueOf(money));
+                        targetMap.get(ob.getMarket()).setBuyTime(LocalDateTime.now());
+                        marketOrderRepository.save(targetMap.get(ob.getMarket()));
+                    }
 
-                    sendSlackHook(SlackMessage.builder()
-                            .text("[매수] Coin: " + ob.getMarket() + " Target: " + targetMap.get(ob.getMarket()))
-                            .build());
+                    if (unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(1.05))) > 0 && checkCoin(coinName)) {
+                        sendSlackHook(SlackMessage.builder()
+                                .text("[매도] Coin: " + ob.getMarket() + " Target: " + targetMap.get(ob.getMarket()))
+                                .build());
 
-                    buyCoin(ob.getMarket(), "5000");
+                        sellCoin(ob.getMarket());
+                    }
+
+                    if (unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(0.98))) < 0 && checkCoin(coinName)) {
+                        sendSlackHook(SlackMessage.builder()
+                                .text("[매도] Coin: " + ob.getMarket() + " Target: " + targetMap.get(ob.getMarket()))
+                                .build());
+
+                        sellCoin(ob.getMarket());
+                    }
                 }
             }
         }
@@ -241,6 +258,17 @@ public class CoinScheduler {
         return money;
     }
 
+    int getKRWByBalances(List<Balance> balanceList) throws Exception {
+        int money = 0;
+
+        for (Balance balance : balanceList) {
+            if (balance.getCurrency().equals("KRW")) {
+                money = (int) Double.parseDouble(balance.getBalance());
+            }
+        }
+        return money;
+    }
+
     String getAuthenticationToken() {
         Algorithm algorithm = Algorithm.HMAC256(secretKey);
         String jwtToken = JWT.create()
@@ -301,6 +329,22 @@ public class CoinScheduler {
         }
     }
 
+    void sellCoin(String market) throws Exception {
+        List<Balance> balanceList = getWallet();
+
+        for (Balance balance : balanceList) {
+            if (("KRW-" + balance.getCurrency()).equals(market)) {
+                HashMap<String, String> params = new HashMap<>();
+                params.put("market", market);
+                params.put("side", "ask");
+                params.put("volume", balance.getBalance());
+                params.put("ord_type", "market");
+
+                orderCoin(params);
+            }
+        }
+    }
+
 
     void buyCoin(String market, String money) throws Exception {
         HashMap<String, String> params = new HashMap<>();
@@ -315,6 +359,17 @@ public class CoinScheduler {
     boolean checkCoin(String coin) throws Exception {
         boolean isExist = false;
         for (Balance balance : getWallet()) {
+            if (balance.getCurrency().equals(coin)) {
+                isExist = true;
+                break;
+            }
+        }
+        return isExist;
+    }
+
+    boolean checkCoinByBalances(List<Balance> balances, String coin) throws Exception {
+        boolean isExist = false;
+        for (Balance balance : balances) {
             if (balance.getCurrency().equals(coin)) {
                 isExist = true;
                 break;
