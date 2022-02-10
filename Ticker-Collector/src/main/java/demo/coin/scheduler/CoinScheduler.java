@@ -138,8 +138,8 @@ public class CoinScheduler {
                     boolean isCoinBuy = checkCoin(balanceList, coinName);
 
                     if (unit.getAskPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice()) > 0
-                            && isCoinBuy
-                            && targetMap.get(ob.getMarket()).getBuyTime() == null) {
+                            && unit.getAskPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(1.01))) < 0
+                            && !isCoinBuy) {
 
                         sendSlackHook(SlackMessage.builder()
                                 .text("[매수] Coin: " + ob.getMarket() + " Target: " + targetMap.get(ob.getMarket()))
