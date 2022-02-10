@@ -135,9 +135,10 @@ public class CoinScheduler {
                     Orderbook.OrderbookUnit unit = ob.getOrderbookUnits().get(0);
 
                     String coinName = ob.getMarket().replace("KRW-", "");
+                    boolean isCoinBuy = checkCoin(balanceList, coinName);
 
                     if (unit.getAskPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice()) > 0
-                            && !checkCoin(coinName)
+                            && isCoinBuy
                             && targetMap.get(ob.getMarket()).getBuyTime() == null) {
 
                         sendSlackHook(SlackMessage.builder()
@@ -149,7 +150,7 @@ public class CoinScheduler {
                         marketOrderRepository.save(targetMap.get(ob.getMarket()));
                     }
 
-                    if (unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(1.05))) > 0 && checkCoin(coinName)) {
+                    if (unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(1.05))) > 0 && isCoinBuy) {
                         sendSlackHook(SlackMessage.builder()
                                 .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice())
                                 .build());
@@ -157,7 +158,7 @@ public class CoinScheduler {
                         sellCoin(ob.getMarket());
                     }
 
-                    if (unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(0.98))) < 0 && checkCoin(coinName)) {
+                    if (unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(0.98))) < 0 && isCoinBuy) {
                         sendSlackHook(SlackMessage.builder()
                                 .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice())
                                 .build());
@@ -356,9 +357,9 @@ public class CoinScheduler {
         orderCoin(params);
     }
 
-    boolean checkCoin(String coin) throws Exception {
+    boolean checkCoin(List<Balance> balanceList, String coin) throws Exception {
         boolean isExist = false;
-        for (Balance balance : getWallet()) {
+        for (Balance balance : balanceList) {
             if (balance.getCurrency().equals(coin)) {
                 isExist = true;
                 break;
