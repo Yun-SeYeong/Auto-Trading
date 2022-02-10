@@ -70,7 +70,7 @@ public class CoinScheduler {
                     .candleDateTimeUtc(candleList.get(i).getCandleDateTimeUtc())
                     .targetPrice((candleList.get(i).getHighPrice()
                             .subtract(candleList.get(i).getLowPrice()))
-                            .multiply(new BigDecimal("0.5"))
+                            .multiply(new BigDecimal("0.6"))
                             .add(candleList.get(i).getTradePrice()))
                     .build();
 
@@ -109,62 +109,61 @@ public class CoinScheduler {
             int money = getKRWByBalances(balanceList);
             money = money > 10000 ? money - 10000 : 0;
 
-            if (money > 0) {
-                Map<String, MarketOrder> targetMap = new HashMap<>();
+            Map<String, MarketOrder> targetMap = new HashMap<>();
 
-                Mono<String> orderbookMono = client.get()
-                        .uri(uriBuilder -> {
-                            UriBuilder builder = uriBuilder
-                                    .path("/orderbook");
-                            for (MarketOrder marketOrder : marketOrderList) {
-                                System.out.println("marketOrder = " + marketOrder);
-                                builder.queryParam("markets", marketOrder.getMarket());
-                                targetMap.put(marketOrder.getMarket(), marketOrder);
-                            }
-                            return builder.build();
-                        })
-                        .header("Accept", "application/json")
-                        .retrieve()
-                        .bodyToMono(String.class);
+            Mono<String> orderbookMono = client.get()
+                    .uri(uriBuilder -> {
+                        UriBuilder builder = uriBuilder
+                                .path("/orderbook");
+                        for (MarketOrder marketOrder : marketOrderList) {
+                            System.out.println("marketOrder = " + marketOrder);
+                            builder.queryParam("markets", marketOrder.getMarket());
+                            targetMap.put(marketOrder.getMarket(), marketOrder);
+                        }
+                        return builder.build();
+                    })
+                    .header("Accept", "application/json")
+                    .retrieve()
+                    .bodyToMono(String.class);
 
-                String orderBook = orderbookMono.block();
+            String orderBook = orderbookMono.block();
 
-                List<Orderbook> orderbookList = objectMapper.readValue(orderBook, new TypeReference<List<Orderbook>>() {});
+            List<Orderbook> orderbookList = objectMapper.readValue(orderBook, new TypeReference<List<Orderbook>>() {});
 
-                for (Orderbook ob : orderbookList) {
-                    Orderbook.OrderbookUnit unit = ob.getOrderbookUnits().get(0);
+            for (Orderbook ob : orderbookList) {
+                Orderbook.OrderbookUnit unit = ob.getOrderbookUnits().get(0);
 
-                    String coinName = ob.getMarket().replace("KRW-", "");
-                    boolean isCoinBuy = checkCoin(balanceList, coinName);
+                String coinName = ob.getMarket().replace("KRW-", "");
+                boolean isCoinBuy = checkCoin(balanceList, coinName);
 
-                    if (unit.getAskPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice()) > 0
-                            && unit.getAskPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(1.01))) < 0
-                            && !isCoinBuy) {
+                if (money > 0
+                        && unit.getAskPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice()) > 0
+                        && unit.getAskPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(1.01))) < 0
+                        && !isCoinBuy) {
 
-                        sendSlackHook(SlackMessage.builder()
-                                .text("[매수] Coin: " + ob.getMarket() + " Target: " + targetMap.get(ob.getMarket()))
-                                .build());
+                    sendSlackHook(SlackMessage.builder()
+                            .text("[매수] Coin: " + ob.getMarket() + " Target: " + targetMap.get(ob.getMarket()))
+                            .build());
 
-                        buyCoin(ob.getMarket(), String.valueOf(money));
-                        targetMap.get(ob.getMarket()).setBuyTime(LocalDateTime.now());
-                        marketOrderRepository.save(targetMap.get(ob.getMarket()));
-                    }
+                    buyCoin(ob.getMarket(), String.valueOf(money));
+                    targetMap.get(ob.getMarket()).setBuyTime(LocalDateTime.now());
+                    marketOrderRepository.save(targetMap.get(ob.getMarket()));
+                }
 
-                    if (unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(1.05))) > 0 && isCoinBuy) {
-                        sendSlackHook(SlackMessage.builder()
-                                .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice())
-                                .build());
+                if (unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(1.05))) > 0 && isCoinBuy) {
+                    sendSlackHook(SlackMessage.builder()
+                            .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice())
+                            .build());
 
-                        sellCoin(ob.getMarket());
-                    }
+                    sellCoin(ob.getMarket());
+                }
 
-                    if (unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(0.98))) < 0 && isCoinBuy) {
-                        sendSlackHook(SlackMessage.builder()
-                                .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice())
-                                .build());
+                if (unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(0.98))) < 0 && isCoinBuy) {
+                    sendSlackHook(SlackMessage.builder()
+                            .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice())
+                            .build());
 
-                        sellCoin(ob.getMarket());
-                    }
+                    sellCoin(ob.getMarket());
                 }
             }
         }
