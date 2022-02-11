@@ -2,12 +2,14 @@ package demo.coin;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.jayway.jsonpath.JsonPath;
 import demo.coin.dao.*;
 import demo.coin.dto.Balance;
+import demo.coin.dto.MinuteCandle;
 import demo.coin.dto.Orderbook;
 import demo.coin.repository.CoinHistoryRepository;
 import demo.coin.repository.DayCandleRepository;
@@ -238,6 +240,59 @@ public class CollectTest {
     @Test
     void checkCoinExist() throws Exception {
         System.out.println("checkCoin(\"BTC\") = " + checkCoin("BTC"));
+    }
+
+    @Test
+    void getMinuteCandle() throws JsonProcessingException {
+        WebClient client = WebClient.create("https://api.upbit.com/v1");
+
+        Mono<String> candleMinuteMono = client.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/candles/minutes/3")
+                        .queryParam("market", "KRW-ETC")
+                        .queryParam("count", 20)
+                        .build())
+                .header("Accept", "application/json")
+                .retrieve()
+                .bodyToMono(String.class);
+
+        String candleMinute = candleMinuteMono.block();
+        System.out.println("candleMinute = " + candleMinute);
+
+        List<MinuteCandle> minuteCandleList = objectMapper.readValue(candleMinute, new TypeReference<>() {});
+        System.out.println("minuteCandleList = " + minuteCandleList);
+
+        BigDecimal ma5 = BigDecimal.valueOf(0);
+        BigDecimal ma10 = BigDecimal.valueOf(0);
+        BigDecimal ma20 = BigDecimal.valueOf(0);
+
+        int i = 0;
+        for (MinuteCandle candle: minuteCandleList) {
+            System.out.println("candle.getCandleDateTimeKst() = " + candle.getCandleDateTimeKst());
+            System.out.println("candle.getTradePrice() = " + candle.getTradePrice());
+
+            if (i < 5) {
+                ma5 = ma5.add(candle.getTradePrice());
+            }
+
+            if (i < 10) {
+                ma10 = ma10.add(candle.getTradePrice());
+            }
+
+            if (i < 20) {
+                ma20 = ma20.add(candle.getTradePrice());
+            }
+
+            i++;
+        }
+
+        ma5 = ma5.divide(BigDecimal.valueOf(5));
+        ma10 = ma10.divide(BigDecimal.valueOf(10));
+        ma20 = ma20.divide(BigDecimal.valueOf(20));
+
+        System.out.println("ma5 = " + ma5);
+        System.out.println("ma10 = " + ma10);
+        System.out.println("ma20 = " + ma20);
     }
 
     boolean checkCoin(String coin) throws Exception {
