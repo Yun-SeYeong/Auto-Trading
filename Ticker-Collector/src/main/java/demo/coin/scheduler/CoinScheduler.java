@@ -176,7 +176,7 @@ public class CoinScheduler {
                     sellCoin(ob.getMarket());
                 }
 
-                if (unit.getBidPrice().compareTo(ma10) < 0) {
+                if (unit.getBidPrice().compareTo(ma10) < 0 && isCoinBuy) {
                     sendSlackHook(SlackMessage.builder()
                             .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice() + "( 이동평균선 이탈 ma10)")
                             .build());
