@@ -2,6 +2,7 @@ package demo.coin.scheduler;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
@@ -10,6 +11,7 @@ import demo.coin.dao.DayCandle;
 import demo.coin.dao.MarketOrder;
 import demo.coin.dao.SlackMessage;
 import demo.coin.dto.Balance;
+import demo.coin.dto.MinuteCandle;
 import demo.coin.dto.Orderbook;
 import demo.coin.repository.DayCandleRepository;
 import demo.coin.repository.MarketOrderRepository;
@@ -105,9 +107,14 @@ public class CoinScheduler {
 
         if (marketOrderList.size() > 0) {
             List<Balance> balanceList = getWallet();
+            List<MinuteCandle> minuteCandleList = getMinuteCandle();
 
             int money = getKRWByBalances(balanceList);
             money = money > 10000 ? money - 10000 : 0;
+
+            BigDecimal ma10 = getMa(minuteCandleList, 10);
+
+            ///////////////////////////////////////////////////////////////////////////
 
             Map<String, MarketOrder> targetMap = new HashMap<>();
 
@@ -130,6 +137,8 @@ public class CoinScheduler {
 
             List<Orderbook> orderbookList = objectMapper.readValue(orderBook, new TypeReference<List<Orderbook>>() {});
 
+            ///////////////////////////////////////////////////////////////////////////
+
             for (Orderbook ob : orderbookList) {
                 Orderbook.OrderbookUnit unit = ob.getOrderbookUnits().get(0);
 
@@ -139,6 +148,7 @@ public class CoinScheduler {
                 if (money > 0
                         && unit.getAskPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice()) > 0
                         && unit.getAskPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(1.01))) < 0
+                        && unit.getAskPrice().compareTo(ma10) > 0
                         && !isCoinBuy) {
 
                     sendSlackHook(SlackMessage.builder()
@@ -152,7 +162,7 @@ public class CoinScheduler {
 
                 if (unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(1.05))) > 0 && isCoinBuy) {
                     sendSlackHook(SlackMessage.builder()
-                            .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice())
+                            .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice() + "( 5% 이상 상승 )")
                             .build());
 
                     sellCoin(ob.getMarket());
@@ -160,7 +170,15 @@ public class CoinScheduler {
 
                 if (unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(0.98))) < 0 && isCoinBuy) {
                     sendSlackHook(SlackMessage.builder()
-                            .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice())
+                            .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice() + "( 2% 이상 하락 )")
+                            .build());
+
+                    sellCoin(ob.getMarket());
+                }
+
+                if (unit.getBidPrice().compareTo(ma10) < 0) {
+                    sendSlackHook(SlackMessage.builder()
+                            .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice() + "( 이동평균선 이탈 ma10)")
                             .build());
 
                     sellCoin(ob.getMarket());
@@ -420,5 +438,47 @@ public class CoinScheduler {
         }
 
         return String.join("&", queryElements.toArray(new String[0]));
+    }
+
+    List<MinuteCandle> getMinuteCandle() throws JsonProcessingException {
+        WebClient client = WebClient.create("https://api.upbit.com/v1");
+
+        Mono<String> candleMinuteMono = client.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/candles/minutes/3")
+                        .queryParam("market", "KRW-ETC")
+                        .queryParam("count", 20)
+                        .build())
+                .header("Accept", "application/json")
+                .retrieve()
+                .bodyToMono(String.class);
+
+        String candleMinute = candleMinuteMono.block();
+        System.out.println("candleMinute = " + candleMinute);
+
+        List<MinuteCandle> minuteCandleList = objectMapper.readValue(candleMinute, new TypeReference<>() {});
+        System.out.println("minuteCandleList = " + minuteCandleList);
+        return minuteCandleList;
+    }
+
+    BigDecimal getMa(List<MinuteCandle> minuteCandleList, int maNum) {
+        BigDecimal ma = BigDecimal.valueOf(0);
+
+        int i = 0;
+        for (MinuteCandle candle: minuteCandleList) {
+            System.out.println("candle.getCandleDateTimeKst() = " + candle.getCandleDateTimeKst());
+            System.out.println("candle.getTradePrice() = " + candle.getTradePrice());
+
+            if (i < maNum) {
+                ma = ma.add(candle.getTradePrice());
+            }
+
+            i++;
+        }
+
+        ma = ma.divide(BigDecimal.valueOf(maNum));
+
+        System.out.println("ma" + maNum + " = " + ma);
+        return ma;
     }
 }

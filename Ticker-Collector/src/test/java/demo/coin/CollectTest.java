@@ -243,7 +243,15 @@ public class CollectTest {
     }
 
     @Test
-    void getMinuteCandle() throws JsonProcessingException {
+    void getMinuteCandleTest() throws JsonProcessingException {
+        List<MinuteCandle> minuteCandleList = getMinuteCandle();
+
+        BigDecimal ma10 = getMa(minuteCandleList, 10);
+
+        System.out.println("ma10 = " + ma10);
+    }
+
+    List<MinuteCandle> getMinuteCandle() throws JsonProcessingException {
         WebClient client = WebClient.create("https://api.upbit.com/v1");
 
         Mono<String> candleMinuteMono = client.get()
@@ -261,39 +269,30 @@ public class CollectTest {
 
         List<MinuteCandle> minuteCandleList = objectMapper.readValue(candleMinute, new TypeReference<>() {});
         System.out.println("minuteCandleList = " + minuteCandleList);
+        return minuteCandleList;
+    }
 
-        BigDecimal ma5 = BigDecimal.valueOf(0);
-        BigDecimal ma10 = BigDecimal.valueOf(0);
-        BigDecimal ma20 = BigDecimal.valueOf(0);
+    BigDecimal getMa(List<MinuteCandle> minuteCandleList, int maNum) {
+        BigDecimal ma = BigDecimal.valueOf(0);
 
         int i = 0;
         for (MinuteCandle candle: minuteCandleList) {
             System.out.println("candle.getCandleDateTimeKst() = " + candle.getCandleDateTimeKst());
             System.out.println("candle.getTradePrice() = " + candle.getTradePrice());
 
-            if (i < 5) {
-                ma5 = ma5.add(candle.getTradePrice());
-            }
-
-            if (i < 10) {
-                ma10 = ma10.add(candle.getTradePrice());
-            }
-
-            if (i < 20) {
-                ma20 = ma20.add(candle.getTradePrice());
+            if (i < maNum) {
+                ma = ma.add(candle.getTradePrice());
             }
 
             i++;
         }
 
-        ma5 = ma5.divide(BigDecimal.valueOf(5));
-        ma10 = ma10.divide(BigDecimal.valueOf(10));
-        ma20 = ma20.divide(BigDecimal.valueOf(20));
+        ma = ma.divide(BigDecimal.valueOf(maNum));
 
-        System.out.println("ma5 = " + ma5);
-        System.out.println("ma10 = " + ma10);
-        System.out.println("ma20 = " + ma20);
+        System.out.println("ma" + maNum + " = " + ma);
+        return ma;
     }
+
 
     boolean checkCoin(String coin) throws Exception {
         boolean isExist = false;
