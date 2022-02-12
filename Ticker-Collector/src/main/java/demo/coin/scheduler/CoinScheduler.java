@@ -456,7 +456,7 @@ public class CoinScheduler {
         String candleMinute = candleMinuteMono.block();
         System.out.println("candleMinute = " + candleMinute);
 
-        List<MinuteCandle> minuteCandleList = objectMapper.readValue(candleMinute, new TypeReference<>() {});
+        List<MinuteCandle> minuteCandleList = objectMapper.readValue(candleMinute, new TypeReference<List<MinuteCandle>>() {});
         System.out.println("minuteCandleList = " + minuteCandleList);
         return minuteCandleList;
     }
