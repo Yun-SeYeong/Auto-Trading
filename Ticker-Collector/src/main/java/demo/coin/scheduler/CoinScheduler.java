@@ -62,7 +62,7 @@ public class CoinScheduler {
         LocalDateTime now = LocalDate.now().atStartOfDay();
         List<DayCandle> candleList = dayCandleRepository.findAllByLogic1(now.minusDays(1), now);
 
-        System.out.println("candleList = " + candleList);
+        //System.out.println("candleList = " + candleList);
 
         int limit = 10;
 
@@ -76,7 +76,7 @@ public class CoinScheduler {
                             .add(candleList.get(i).getTradePrice()))
                     .build();
 
-            System.out.println("order = " + order);
+            //System.out.println("order = " + order);
             sendSlackHook(SlackMessage.builder()
                     .text("[주문 생성] " + order)
                     .build());
@@ -95,13 +95,9 @@ public class CoinScheduler {
 
     @Scheduled(cron = "* * 1-23 * * *")
     public void checkMarket() throws Exception {
-//        log.debug("checkMarket");
-//        System.out.println("CoinScheduler.checkMarket");
-
         WebClient client = WebClient.create("https://api.upbit.com/v1");
 
         LocalDate lastDay = LocalDate.now().minusDays(1);
-//        System.out.println("date = " + lastDay);
 
         List<MarketOrder> marketOrderList = marketOrderRepository.findAllByCandleDateTimeUtc(lastDay.atStartOfDay());
 
@@ -212,7 +208,7 @@ public class CoinScheduler {
 
             String candles = candlesMono.block();
 
-            log.debug("candles = " + candles);
+//            log.debug("candles = " + candles);
             sendSlackHook(SlackMessage.builder()
                     .text("[COLLECT] COIN:" + marketName + " (" + i + "/" + marketNames.size() + ")[" + ((int) (((double) i/marketNames.size())*100)) + "%]")
                     .build());
@@ -255,10 +251,10 @@ public class CoinScheduler {
                 .bodyToMono(String.class);
 
         String coinNames = coinNamesMono.block();
-        System.out.println("coinNames = " + coinNames);
+        //System.out.println("coinNames = " + coinNames);
 
         List<String> nameList = JsonPath.read(coinNames, "$.*.market");
-        System.out.println("nameList = " + nameList);
+        //System.out.println("nameList = " + nameList);
 
         return nameList;
     }
@@ -298,7 +294,7 @@ public class CoinScheduler {
     }
 
     List<Balance> getWallet() throws Exception {
-        System.out.println("CollectTest.getBalance");
+        //System.out.println("CollectTest.getBalance");
         String serverUrl = "https://api.upbit.com";
 
         String authenticationToken = getAuthenticationToken();
@@ -314,11 +310,11 @@ public class CoinScheduler {
 
             String responseJson = EntityUtils.toString(entity, "UTF-8");
 
-            System.out.println(response.getStatusLine());
-            System.out.println(responseJson);
+            //System.out.println(response.getStatusLine());
+            //System.out.println(responseJson);
 
             List<Balance> balanceList = objectMapper.readValue(responseJson, new TypeReference<List<Balance>>() {});
-            System.out.println("balanceList = " + balanceList);
+            //System.out.println("balanceList = " + balanceList);
 
             return balanceList;
         } catch (IOException e) {
@@ -334,7 +330,7 @@ public class CoinScheduler {
 
         for (Balance balance : balanceList) {
             if (!balance.getCurrency().equals("KRW")) {
-                System.out.println("balance = " + balance);
+                //System.out.println("balance = " + balance);
 
                 HashMap<String, String> params = new HashMap<>();
                 params.put("market", "KRW-" + balance.getCurrency());
@@ -408,7 +404,7 @@ public class CoinScheduler {
             HttpResponse response = client.execute(request);
             HttpEntity entity = response.getEntity();
 
-            System.out.println(EntityUtils.toString(entity, "UTF-8"));
+            //System.out.println(EntityUtils.toString(entity, "UTF-8"));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -454,10 +450,10 @@ public class CoinScheduler {
                 .bodyToMono(String.class);
 
         String candleMinute = candleMinuteMono.block();
-        System.out.println("candleMinute = " + candleMinute);
+        //System.out.println("candleMinute = " + candleMinute);
 
         List<MinuteCandle> minuteCandleList = objectMapper.readValue(candleMinute, new TypeReference<List<MinuteCandle>>() {});
-        System.out.println("minuteCandleList = " + minuteCandleList);
+        //System.out.println("minuteCandleList = " + minuteCandleList);
         return minuteCandleList;
     }
 
@@ -466,8 +462,8 @@ public class CoinScheduler {
 
         int i = 0;
         for (MinuteCandle candle: minuteCandleList) {
-            System.out.println("candle.getCandleDateTimeKst() = " + candle.getCandleDateTimeKst());
-            System.out.println("candle.getTradePrice() = " + candle.getTradePrice());
+            //System.out.println("candle.getCandleDateTimeKst() = " + candle.getCandleDateTimeKst());
+            //System.out.println("candle.getTradePrice() = " + candle.getTradePrice());
 
             if (i < maNum) {
                 ma = ma.add(candle.getTradePrice());
@@ -478,7 +474,7 @@ public class CoinScheduler {
 
         ma = ma.divide(BigDecimal.valueOf(maNum));
 
-        System.out.println("ma" + maNum + " = " + ma);
+        //System.out.println("ma" + maNum + " = " + ma);
         return ma;
     }
 }
