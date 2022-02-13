@@ -156,7 +156,7 @@ public class CoinScheduler {
                     marketOrderRepository.save(targetMap.get(ob.getMarket()));
                 }
 
-                if (unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(1.05))) > 0 && isCoinBuy) {
+                if (isCoinBuy && unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(1.05))) > 0) {
                     sendSlackHook(SlackMessage.builder()
                             .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice() + "( 5% 이상 상승 )")
                             .build());
@@ -164,7 +164,7 @@ public class CoinScheduler {
                     sellCoin(ob.getMarket());
                 }
 
-                if (unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(0.98))) < 0 && isCoinBuy) {
+                if (isCoinBuy && unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(0.98))) < 0) {
                     sendSlackHook(SlackMessage.builder()
                             .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice() + "( 2% 이상 하락 )")
                             .build());
@@ -172,7 +172,15 @@ public class CoinScheduler {
                     sellCoin(ob.getMarket());
                 }
 
-                if (unit.getBidPrice().compareTo(ma10) < 0 && isCoinBuy) {
+                if (isCoinBuy && unit.getBidPrice().compareTo(ma10) < 0 && unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(0.99))) < 0) {
+                    sendSlackHook(SlackMessage.builder()
+                            .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice() + "( 이동평균선 이탈 ma10)")
+                            .build());
+
+                    sellCoin(ob.getMarket());
+                }
+
+                if (isCoinBuy && unit.getBidPrice().compareTo(ma10) < 0 && unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(1.01))) > 0) {
                     sendSlackHook(SlackMessage.builder()
                             .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice() + "( 이동평균선 이탈 ma10)")
                             .build());
