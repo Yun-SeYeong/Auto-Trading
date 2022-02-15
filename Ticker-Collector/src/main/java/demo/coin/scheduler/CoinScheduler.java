@@ -54,6 +54,8 @@ public class CoinScheduler {
     @Autowired
     MarketOrderRepository marketOrderRepository;
 
+    private int todayStartMoney = -1;
+
     private final String accessKey = "dPqjPTmcluZqUGGkQxwOZtNrnlHPCiAMOk3S2z6s";
     private final String secretKey = "7C6CrYWkxnxnMSIGoig8UNgJ3EDQB47eituYU0Bj";
 
@@ -83,6 +85,10 @@ public class CoinScheduler {
 
             marketOrderRepository.save(order);
         }
+
+        sendSlackHook(SlackMessage.builder()
+                .text("Start Money: " + todayStartMoney)
+                .build());
     }
 
     @Scheduled(cron = "0 0 0 * * *")
@@ -91,6 +97,8 @@ public class CoinScheduler {
         sendSlackHook(SlackMessage.builder()
                 .text("Sell All Coins")
                 .build());
+
+        todayStartMoney = getKRWByBalances(getWallet());
     }
 
     @Scheduled(cron = "* * 1-23 * * *")
@@ -105,6 +113,11 @@ public class CoinScheduler {
             List<Balance> balanceList = getWallet();
 
             int money = getKRWByBalances(balanceList);
+
+            if (todayStartMoney < 0) {
+                todayStartMoney = money;
+            }
+
             money = money > 10000 ? money - 10000 : 0;
 
 
@@ -162,6 +175,8 @@ public class CoinScheduler {
                             .build());
 
                     sellCoin(ob.getMarket());
+
+                    sendLossMessage(((double) (getKRWByBalances(getWallet()) / todayStartMoney)) * 100);
                 }
 
                 if (isCoinBuy && unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(0.98))) < 0) {
@@ -170,22 +185,28 @@ public class CoinScheduler {
                             .build());
 
                     sellCoin(ob.getMarket());
+
+                    sendLossMessage(((double) (getKRWByBalances(getWallet()) / todayStartMoney)) * 100);
                 }
 
                 if (isCoinBuy && unit.getBidPrice().compareTo(ma10) < 0 && unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(0.99))) < 0) {
                     sendSlackHook(SlackMessage.builder()
-                            .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice() + "( 이동평균선 이탈로 인한 손절 [ma10])")
+                            .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice() + "( 이동평균선 이탈로 인한 손절 [ma10] )")
                             .build());
 
                     sellCoin(ob.getMarket());
+
+                    sendLossMessage(((double) (getKRWByBalances(getWallet()) / todayStartMoney)) * 100);
                 }
 
                 if (isCoinBuy && unit.getBidPrice().compareTo(ma10) < 0 && unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(1.01))) > 0) {
                     sendSlackHook(SlackMessage.builder()
-                            .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice() + "( 이동평균선 이탈로 인한 익절 ma10)")
+                            .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice() + "( 이동평균선 이탈로 인한 익절 [ma10] )")
                             .build());
 
                     sellCoin(ob.getMarket());
+
+                    sendLossMessage(((double) (getKRWByBalances(getWallet()) / todayStartMoney)) * 100);
                 }
             }
         }
@@ -484,5 +505,11 @@ public class CoinScheduler {
 
         //System.out.println("ma" + maNum + " = " + ma);
         return ma;
+    }
+
+    void sendLossMessage(double loss) {
+        sendSlackHook(SlackMessage.builder()
+                .text(loss > 0 ? "[익절] " : "[손절] " + loss + "%")
+                .build());
     }
 }
