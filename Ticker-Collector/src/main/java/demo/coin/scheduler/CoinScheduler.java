@@ -176,7 +176,9 @@ public class CoinScheduler {
 
                     sellCoin(ob.getMarket());
 
-                    sendLossMessage(((double) (getKRWByBalances(getWallet()) / todayStartMoney)) * 100);
+                    int currentMoney =  getKRWByBalances(getWallet());
+                    sendLossMessage(((double) (currentMoney) / todayStartMoney) * 100);
+                    todayStartMoney = currentMoney;
                 }
 
                 if (isCoinBuy && unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(0.98))) < 0) {
@@ -186,7 +188,9 @@ public class CoinScheduler {
 
                     sellCoin(ob.getMarket());
 
-                    sendLossMessage(((double) (getKRWByBalances(getWallet()) / todayStartMoney)) * 100);
+                    int currentMoney =  getKRWByBalances(getWallet());
+                    sendLossMessage(((double) (currentMoney) / todayStartMoney) * 100);
+                    todayStartMoney = currentMoney;
                 }
 
                 if (isCoinBuy && unit.getBidPrice().compareTo(ma10) < 0 && unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(0.99))) < 0) {
@@ -196,7 +200,9 @@ public class CoinScheduler {
 
                     sellCoin(ob.getMarket());
 
-                    sendLossMessage(((double) (getKRWByBalances(getWallet()) / todayStartMoney)) * 100);
+                    int currentMoney =  getKRWByBalances(getWallet());
+                    sendLossMessage(((double) (currentMoney) / todayStartMoney) * 100);
+                    todayStartMoney = currentMoney;
                 }
 
                 if (isCoinBuy && unit.getBidPrice().compareTo(ma10) < 0 && unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(1.01))) > 0) {
@@ -206,7 +212,9 @@ public class CoinScheduler {
 
                     sellCoin(ob.getMarket());
 
-                    sendLossMessage(((double) (getKRWByBalances(getWallet()) / todayStartMoney)) * 100);
+                    int currentMoney =  getKRWByBalances(getWallet());
+                    sendLossMessage(((double) (currentMoney) / todayStartMoney) * 100);
+                    todayStartMoney = currentMoney;
                 }
             }
         }
