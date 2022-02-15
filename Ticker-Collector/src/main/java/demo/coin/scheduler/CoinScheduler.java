@@ -118,7 +118,7 @@ public class CoinScheduler {
                 todayStartMoney = money;
             }
 
-            money = money > 10000 ? money - 10000 : 0;
+            money = money > 5000 ? money - 5000 : 0;
 
 
             ///////////////////////////////////////////////////////////////////////////
