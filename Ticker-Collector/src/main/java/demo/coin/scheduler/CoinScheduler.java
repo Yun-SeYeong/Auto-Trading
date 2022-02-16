@@ -60,7 +60,7 @@ public class CoinScheduler {
     private final String secretKey = "7C6CrYWkxnxnMSIGoig8UNgJ3EDQB47eituYU0Bj";
 
     @Scheduled(cron = "0 30 0 * * *")
-    public void makeOrder() {
+    public void makeOrder() throws JsonProcessingException, InterruptedException {
         LocalDateTime now = LocalDate.now().atStartOfDay();
         List<DayCandle> candleList = dayCandleRepository.findAllByLogic1(now.minusDays(1), now);
 
@@ -68,14 +68,31 @@ public class CoinScheduler {
 
         int limit = 10;
 
+        WebClient client = WebClient.create("https://api.upbit.com/v1");
+
         for (int i = 0; i < limit; i++) {
+
+            int finalI = i;
+            Mono<String> candlesMono = client.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/candles/days")
+                            .queryParam("market", candleList.get(finalI).getMarket())
+                            .queryParam("count", 1)
+                            .build())
+                    .retrieve()
+                    .bodyToMono(String.class);
+
+            String candles = candlesMono.block();
+
+            List<DayCandle> dayCandleList = objectMapper.readValue(candles, new TypeReference<List<DayCandle>>() {});
+
             MarketOrder order = MarketOrder.builder()
                     .market(candleList.get(i).getMarket())
                     .candleDateTimeUtc(candleList.get(i).getCandleDateTimeUtc())
                     .targetPrice((candleList.get(i).getHighPrice()
                             .subtract(candleList.get(i).getLowPrice()))
                             .multiply(new BigDecimal("0.6"))
-                            .add(candleList.get(i).getTradePrice()))
+                            .add(dayCandleList.get(0).getOpeningPrice()))
                     .build();
 
             //System.out.println("order = " + order);
@@ -84,6 +101,8 @@ public class CoinScheduler {
                     .build());
 
             marketOrderRepository.save(order);
+
+            Thread.sleep(1000);
         }
 
         sendSlackHook(SlackMessage.builder()
