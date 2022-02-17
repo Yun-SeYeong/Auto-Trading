@@ -7,7 +7,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.jayway.jsonpath.JsonPath;
-import demo.coin.dao.DayCandle;
+import demo.coin.controller.CoinHistoryService;
 import demo.coin.dao.MarketOrder;
 import demo.coin.dao.SlackMessage;
 import demo.coin.dto.Balance;
@@ -26,7 +26,6 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -45,14 +44,13 @@ import java.util.*;
 @RequiredArgsConstructor
 @Slf4j
 public class CoinScheduler {
-    @Autowired
-    ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
-    @Autowired
-    DayCandleRepository dayCandleRepository;
+    private final DayCandleRepository dayCandleRepository;
 
-    @Autowired
-    MarketOrderRepository marketOrderRepository;
+    private final MarketOrderRepository marketOrderRepository;
+
+    private final CoinHistoryService coinHistoryService;
 
     private int todayStartMoney = -1;
 
@@ -60,54 +58,8 @@ public class CoinScheduler {
     private final String secretKey = "7C6CrYWkxnxnMSIGoig8UNgJ3EDQB47eituYU0Bj";
 
     @Scheduled(cron = "0 30 0 * * *")
-    public void makeOrder() throws JsonProcessingException, InterruptedException {
-        LocalDateTime now = LocalDate.now().atStartOfDay();
-        List<DayCandle> candleList = dayCandleRepository.findAllByLogic1(now.minusDays(1), now);
-
-        //System.out.println("candleList = " + candleList);
-
-        int limit = 10;
-
-        WebClient client = WebClient.create("https://api.upbit.com/v1");
-
-        for (int i = 0; i < limit; i++) {
-
-            int finalI = i;
-            Mono<String> candlesMono = client.get()
-                    .uri(uriBuilder -> uriBuilder
-                            .path("/candles/days")
-                            .queryParam("market", candleList.get(finalI).getMarket())
-                            .queryParam("count", 1)
-                            .build())
-                    .retrieve()
-                    .bodyToMono(String.class);
-
-            String candles = candlesMono.block();
-
-            List<DayCandle> dayCandleList = objectMapper.readValue(candles, new TypeReference<List<DayCandle>>() {});
-
-            MarketOrder order = MarketOrder.builder()
-                    .market(candleList.get(i).getMarket())
-                    .candleDateTimeUtc(candleList.get(i).getCandleDateTimeUtc())
-                    .targetPrice((candleList.get(i).getHighPrice()
-                            .subtract(candleList.get(i).getLowPrice()))
-                            .multiply(new BigDecimal("0.6"))
-                            .add(dayCandleList.get(0).getOpeningPrice()))
-                    .build();
-
-            //System.out.println("order = " + order);
-            sendSlackHook(SlackMessage.builder()
-                    .text("[주문 생성] " + order)
-                    .build());
-
-            marketOrderRepository.save(order);
-
-            Thread.sleep(1000);
-        }
-
-        sendSlackHook(SlackMessage.builder()
-                .text("Start Money: " + todayStartMoney)
-                .build());
+    public void makeOrder() throws Exception {
+        coinHistoryService.makeOrder();
     }
 
     @Scheduled(cron = "0 0 0 * * *")
@@ -116,8 +68,6 @@ public class CoinScheduler {
         sendSlackHook(SlackMessage.builder()
                 .text("Sell All Coins")
                 .build());
-
-        todayStartMoney = getKRWByBalances(getWallet());
     }
 
     @Scheduled(cron = "* * 1-23 * * *")
@@ -241,49 +191,7 @@ public class CoinScheduler {
 
     @Scheduled(cron = "0 0 0 * * *")
     public void run() throws Exception{
-        log.info("Collecting start...");
-
-        sendSlackHook(SlackMessage.builder()
-                .text("Start collecting...")
-                .build());
-
-        List<String> marketNames = getMarketName();
-
-        WebClient client = WebClient.create("https://api.upbit.com/v1");
-
-        int i = 0;
-        for (String marketName : marketNames) {
-            Mono<String> candlesMono = client.get()
-                    .uri(uriBuilder -> uriBuilder
-                            .path("/candles/days")
-                            .queryParam("market", marketName)
-                            .queryParam("count", 2)
-                            .build())
-                    .retrieve()
-                    .bodyToMono(String.class);
-
-            String candles = candlesMono.block();
-
-//            log.debug("candles = " + candles);
-            sendSlackHook(SlackMessage.builder()
-                    .text("[COLLECT] COIN:" + marketName + " (" + i + "/" + marketNames.size() + ")[" + ((int) (((double) i/marketNames.size())*100)) + "%]")
-                    .build());
-
-            List<DayCandle> dayCandleList = objectMapper.readValue(candles, new TypeReference<List<DayCandle>>() {});
-
-            dayCandleList.remove(dayCandleList.get(0));
-
-            dayCandleRepository.saveAll(dayCandleList);
-
-            Thread.sleep(1000);
-            i++;
-        }
-
-        log.info("Collecting success!");
-
-        sendSlackHook(SlackMessage.builder()
-                .text("End collecting.")
-                .build());
+        coinHistoryService.collectCoin();
     }
 
     void sendSlackHook(SlackMessage slackMessage) {

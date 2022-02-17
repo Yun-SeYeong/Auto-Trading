@@ -17,4 +17,16 @@ public class CoinHistoryController {
         coinHistoryService.downloadHistory();
         return new ResponseEntity("Success", HttpStatus.OK);
     }
+
+    @PostMapping("/collect_coin")
+    ResponseEntity<String> collectCoin() throws Exception {
+        coinHistoryService.collectCoin();
+        return new ResponseEntity("Success", HttpStatus.OK);
+    }
+
+    @PostMapping("/make_order")
+    ResponseEntity<String> makeOrder() throws Exception {
+        coinHistoryService.makeOrder();
+        return new ResponseEntity("Success", HttpStatus.OK);
+    }
 }
