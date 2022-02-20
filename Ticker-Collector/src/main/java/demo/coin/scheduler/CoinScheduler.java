@@ -65,9 +65,7 @@ public class CoinScheduler {
     @Scheduled(cron = "0 0 0 * * *")
     public void sellCoins() throws Exception {
         sellAllCoin();
-        sendSlackHook(SlackMessage.builder()
-                .text("Sell All Coins")
-                .build());
+        checkCurrentBalance();
     }
 
     @Scheduled(cron = "* * 1-23 * * *")
@@ -145,9 +143,7 @@ public class CoinScheduler {
 
                     sellCoin(ob.getMarket());
 
-                    int currentMoney =  getKRWByBalances(getWallet());
-                    sendLossMessage(((double) (currentMoney) / todayStartMoney) * 100);
-                    todayStartMoney = currentMoney;
+                    checkCurrentBalance();
                 }
 
                 if (isCoinBuy && unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(0.98))) < 0) {
@@ -157,9 +153,7 @@ public class CoinScheduler {
 
                     sellCoin(ob.getMarket());
 
-                    int currentMoney =  getKRWByBalances(getWallet());
-                    sendLossMessage(((double) (currentMoney) / todayStartMoney) * 100);
-                    todayStartMoney = currentMoney;
+                    checkCurrentBalance();
                 }
 
                 if (isCoinBuy && unit.getBidPrice().compareTo(ma10) < 0 && unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(0.99))) < 0) {
@@ -169,9 +163,7 @@ public class CoinScheduler {
 
                     sellCoin(ob.getMarket());
 
-                    int currentMoney =  getKRWByBalances(getWallet());
-                    sendLossMessage(((double) (currentMoney) / todayStartMoney) * 100);
-                    todayStartMoney = currentMoney;
+                    checkCurrentBalance();
                 }
 
                 if (isCoinBuy && unit.getBidPrice().compareTo(ma10) < 0 && unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(1.01))) > 0) {
@@ -181,9 +173,7 @@ public class CoinScheduler {
 
                     sellCoin(ob.getMarket());
 
-                    int currentMoney =  getKRWByBalances(getWallet());
-                    sendLossMessage(((double) (currentMoney) / todayStartMoney) * 100);
-                    todayStartMoney = currentMoney;
+                    checkCurrentBalance();
                 }
             }
         }
@@ -203,6 +193,18 @@ public class CoinScheduler {
                 .retrieve()
                 .bodyToMono(String.class)
                 .block();
+    }
+
+    void checkCurrentBalance() throws Exception {
+        List<Balance> w = getWallet();
+
+        sendSlackHook(SlackMessage.builder()
+                .text("[자산현황] " + w)
+                .build());
+
+        int currentMoney =  getKRWByBalances(w);
+        sendLossMessage(((double) (currentMoney) / todayStartMoney) * 100);
+        todayStartMoney = currentMoney;
     }
 
     List<String> getMarketName() {

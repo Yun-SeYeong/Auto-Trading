@@ -45,7 +45,6 @@ public class CoinHistoryServiceImpl implements CoinHistoryService{
     private final DayCandleRepository dayCandleRepository;
     private final ObjectMapper objectMapper;
 
-    private int todayStartMoney = -1;
 
     private final String accessKey = "dPqjPTmcluZqUGGkQxwOZtNrnlHPCiAMOk3S2z6s";
     private final String secretKey = "7C6CrYWkxnxnMSIGoig8UNgJ3EDQB47eituYU0Bj";
@@ -179,12 +178,6 @@ public class CoinHistoryServiceImpl implements CoinHistoryService{
 
             Thread.sleep(1000);
         }
-
-        todayStartMoney = getKRWByBalances(getWallet());
-
-        sendSlackHook(SlackMessage.builder()
-                .text("Start Money: " + todayStartMoney)
-                .build());
     }
 
     String getAuthenticationToken() {
