@@ -140,7 +140,9 @@ public class CoinHistoryServiceImpl implements CoinHistoryService{
 
         //System.out.println("candleList = " + candleList);
 
-        int limit = 20;
+        marketOrderRepository.deleteAll();
+
+        int limit = 15;
 
         WebClient client = WebClient.create("https://api.upbit.com/v1");
 
