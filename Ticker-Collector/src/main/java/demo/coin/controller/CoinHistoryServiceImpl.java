@@ -140,7 +140,7 @@ public class CoinHistoryServiceImpl implements CoinHistoryService{
 
         //System.out.println("candleList = " + candleList);
 
-        int limit = 10;
+        int limit = 20;
 
         WebClient client = WebClient.create("https://api.upbit.com/v1");
 
