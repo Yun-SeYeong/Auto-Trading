@@ -136,7 +136,7 @@ public class CoinScheduler {
                     marketOrderRepository.save(targetMap.get(ob.getMarket()));
                 }
 
-                if (isCoinBuy && unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(1.05))) > 0) {
+                if (isCoinBuy && unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(1.07))) > 0) {
                     sendSlackHook(SlackMessage.builder()
                             .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice() + "( 5% 이상 상승 )")
                             .build());
