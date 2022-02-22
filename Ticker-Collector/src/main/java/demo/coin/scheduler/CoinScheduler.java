@@ -196,6 +196,7 @@ public class CoinScheduler {
     }
 
     void checkCurrentBalance() throws Exception {
+        Thread.sleep(1000);
         List<Balance> w = getWallet();
 
         sendSlackHook(SlackMessage.builder()
