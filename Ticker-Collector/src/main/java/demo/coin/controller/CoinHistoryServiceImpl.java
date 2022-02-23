@@ -167,7 +167,7 @@ public class CoinHistoryServiceImpl implements CoinHistoryService{
                     .candleDateTimeUtc(candleList.get(i).getCandleDateTimeUtc())
                     .targetPrice((candleList.get(i).getHighPrice()
                             .subtract(candleList.get(i).getLowPrice()))
-                            .multiply(new BigDecimal("0.4"))
+                            .multiply(new BigDecimal("0.2"))
                             .add(dayCandleList.get(0).getOpeningPrice()))
                     .build();
 
