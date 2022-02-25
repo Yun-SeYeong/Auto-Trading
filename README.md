@@ -76,5 +76,35 @@
 
 
 
+### Service 및 Repository
+
+
+
+##### CoinMarketService
+
+- Coin API를 통해 시세 조회 또는 매수, 매도를 할 수 있다.
+- Upbit외에도 Binance, Bybit등 코인 시장에 따라 구현체를 갖도록 한다.
+
+
+
+##### TradingAlgorithmService
+
+- 목표가 산정하는 부분을 추상화 한다.
+- 알고리즘에 따라 구현체를 정의할 수 있도록 한다.
+
+
+
+##### DayCandleRepository
+
+- 일봉을 생성, 조회, 수정, 삭제한다.
+
+
+
+##### MarketOrderRepository
+
+- 계산된 목표가를 생성, 조회, 수정, 삭제한다.
+
+
+
 
 
