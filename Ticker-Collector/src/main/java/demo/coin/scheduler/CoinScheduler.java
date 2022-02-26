@@ -447,7 +447,7 @@ public class CoinScheduler {
 
     void sendLossMessage(double loss) {
         sendSlackHook(SlackMessage.builder()
-                .text((loss > 0 ? "[익절] " : "[손절] ") + loss + "%")
+                .text((loss > 100 ? "[익절] " + (loss - 100)  : "[손절] " + (100 - loss)) + "%")
                 .build());
     }
 }
