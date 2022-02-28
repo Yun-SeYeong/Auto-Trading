@@ -27,6 +27,7 @@ import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -162,18 +163,21 @@ public class CoinHistoryServiceImpl implements CoinHistoryService{
 
             List<DayCandle> dayCandleList = objectMapper.readValue(candles, new TypeReference<List<DayCandle>>() {});
 
+            BigDecimal k = (candleList.get(i).getTradePrice().subtract(candleList.get(i).getOpeningPrice()))
+                    .divide(candleList.get(i).getHighPrice().subtract(candleList.get(i).getLowPrice()), RoundingMode.HALF_UP);
+
             MarketOrder order = MarketOrder.builder()
                     .market(candleList.get(i).getMarket())
                     .candleDateTimeUtc(candleList.get(i).getCandleDateTimeUtc())
                     .targetPrice((candleList.get(i).getHighPrice()
                             .subtract(candleList.get(i).getLowPrice()))
-                            .multiply(new BigDecimal("0.2"))
+                            .multiply(k)
                             .add(dayCandleList.get(0).getOpeningPrice()))
                     .build();
 
             //System.out.println("order = " + order);
             sendSlackHook(SlackMessage.builder()
-                    .text("[주문 생성] " + order)
+                    .text("[주문 생성] " + order + " \n[K] " + k)
                     .build());
 
             marketOrderRepository.save(order);
