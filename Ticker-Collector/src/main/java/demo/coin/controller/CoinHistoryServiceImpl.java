@@ -163,8 +163,8 @@ public class CoinHistoryServiceImpl implements CoinHistoryService{
 
             List<DayCandle> dayCandleList = objectMapper.readValue(candles, new TypeReference<List<DayCandle>>() {});
 
-            BigDecimal k = (candleList.get(i).getTradePrice().subtract(candleList.get(i).getOpeningPrice()))
-                    .divide(candleList.get(i).getHighPrice().subtract(candleList.get(i).getLowPrice()), RoundingMode.HALF_UP);
+            BigDecimal k = new BigDecimal(1).subtract(candleList.get(i).getTradePrice().subtract(candleList.get(i).getOpeningPrice())
+                    .divide(candleList.get(i).getHighPrice().subtract(candleList.get(i).getLowPrice()), RoundingMode.HALF_UP));
 
             MarketOrder order = MarketOrder.builder()
                     .market(candleList.get(i).getMarket())
