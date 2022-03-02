@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
@@ -32,12 +33,16 @@ public class DayCandle {
 
     private LocalDateTime candleDateTimeKst;
 
+    @Column(precision = 36, scale = 18)
     private BigDecimal openingPrice;
 
+    @Column(precision = 36, scale = 18)
     private BigDecimal highPrice;
 
+    @Column(precision = 36, scale = 18)
     private BigDecimal lowPrice;
 
+    @Column(precision = 36, scale = 18)
     private BigDecimal tradePrice;
 
     private BigDecimal candleAccTradePrice;
