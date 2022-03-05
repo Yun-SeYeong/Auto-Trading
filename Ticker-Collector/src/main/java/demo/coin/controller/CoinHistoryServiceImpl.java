@@ -99,9 +99,7 @@ public class CoinHistoryServiceImpl implements CoinHistoryService{
                     String coins = null;
                     try {
                         coins = coinsMono.toFuture().get();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    } catch (ExecutionException e) {
+                    } catch (InterruptedException | ExecutionException e) {
                         e.printStackTrace();
                     }
                     System.out.println("coins = " + coins);
