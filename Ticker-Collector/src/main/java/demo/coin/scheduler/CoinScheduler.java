@@ -134,6 +134,7 @@ public class CoinScheduler {
                     buyCoin(ob.getMarket(), String.valueOf(money));
                     targetMap.get(ob.getMarket()).setBuyTime(LocalDateTime.now());
                     marketOrderRepository.save(targetMap.get(ob.getMarket()));
+                    break;
                 }
 
                 if (isCoinBuy && unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(1.07))) > 0) {
@@ -144,6 +145,7 @@ public class CoinScheduler {
                     sellCoin(ob.getMarket());
 
                     checkCurrentBalance();
+                    break;
                 }
 
                 if (isCoinBuy && unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(0.97))) < 0) {
@@ -154,6 +156,7 @@ public class CoinScheduler {
                     sellCoin(ob.getMarket());
 
                     checkCurrentBalance();
+                    break;
                 }
 
                 if (isCoinBuy && unit.getBidPrice().compareTo(ma10) < 0 && unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(0.985))) < 0) {
@@ -164,6 +167,7 @@ public class CoinScheduler {
                     sellCoin(ob.getMarket());
 
                     checkCurrentBalance();
+                    break;
                 }
 
                 if (isCoinBuy && unit.getBidPrice().compareTo(ma10) < 0 && unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(1.005))) > 0) {
@@ -174,6 +178,7 @@ public class CoinScheduler {
                     sellCoin(ob.getMarket());
 
                     checkCurrentBalance();
+                    break;
                 }
             }
         }
