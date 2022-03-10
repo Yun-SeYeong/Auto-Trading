@@ -13,6 +13,6 @@ import java.util.List;
 @Repository
 public interface DayCandleRepository extends JpaRepository<DayCandle, DayCandleKey> {
 
-    @Query(value = "select dc from DayCandle dc where dc.candleDateTimeUtc >= :startDate and dc.candleDateTimeUtc < :endDate and dc.market like 'KRW-%' order by (dc.tradePrice - dc.openingPrice) / (dc.highPrice - dc.lowPrice) desc")
+    @Query(value = "select dc from DayCandle dc where dc.candleDateTimeUtc >= :startDate and dc.candleDateTimeUtc < :endDate and dc.market like 'KRW-%' order by (dc.tradePrice - dc.openingPrice) / (dc.highPrice - dc.lowPrice) * (dc.openingPrice * 100 / dc.tradePrice) desc")
     List<DayCandle> findAllByLogic1(@Param(value = "startDate") LocalDateTime startDate, @Param(value = "endDate") LocalDateTime endDate);
 }
