@@ -12,6 +12,7 @@ import demo.coin.dao.TradeHistory;
 import demo.coin.dto.Balance;
 import demo.coin.repository.CoinHistoryRepository;
 import demo.coin.repository.TradeHistoryRepository;
+import lombok.RequiredArgsConstructor;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -23,6 +24,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +37,7 @@ import java.security.MessageDigest;
 import java.time.LocalDate;
 import java.util.*;
 
+@RequiredArgsConstructor
 @SpringBootTest
 public class BackTester {
 
@@ -47,8 +50,11 @@ public class BackTester {
     @Autowired
     ObjectMapper objectMapper;
 
-    private final String accessKey = "dPqjPTmcluZqUGGkQxwOZtNrnlHPCiAMOk3S2z6s";
-    private final String secretKey = "7C6CrYWkxnxnMSIGoig8UNgJ3EDQB47eituYU0Bj";
+    @Value("${upbit.access-key}")
+    private final String accessKey;
+
+    @Value("${upbit.secret-key}")
+    private final String secretKey;
 
     @Test
     @Transactional

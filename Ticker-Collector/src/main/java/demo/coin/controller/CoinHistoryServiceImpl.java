@@ -21,6 +21,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -47,8 +48,11 @@ public class CoinHistoryServiceImpl implements CoinHistoryService{
     private final ObjectMapper objectMapper;
 
 
-    private final String accessKey = "dPqjPTmcluZqUGGkQxwOZtNrnlHPCiAMOk3S2z6s";
-    private final String secretKey = "7C6CrYWkxnxnMSIGoig8UNgJ3EDQB47eituYU0Bj";
+    @Value("${upbit.access-key}")
+    private final String accessKey;
+
+    @Value("${upbit.secret-key}")
+    private final String secretKey;
 
     String getTicker() throws ExecutionException, InterruptedException {
         WebClient client = WebClient.create("https://api.bithumb.com/public/ticker");

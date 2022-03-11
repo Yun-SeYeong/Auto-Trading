@@ -14,6 +14,7 @@ import demo.coin.dto.Orderbook;
 import demo.coin.repository.CoinHistoryRepository;
 import demo.coin.repository.DayCandleRepository;
 import demo.coin.repository.MarketOrderRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -26,6 +27,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriBuilder;
@@ -42,6 +44,7 @@ import java.time.ZoneId;
 import java.util.*;
 
 @SpringBootTest
+@RequiredArgsConstructor
 @Slf4j
 public class CollectTest {
 
@@ -57,8 +60,11 @@ public class CollectTest {
     @Autowired
     ObjectMapper objectMapper;
 
-    private final String accessKey = "dPqjPTmcluZqUGGkQxwOZtNrnlHPCiAMOk3S2z6s";
-    private final String secretKey = "7C6CrYWkxnxnMSIGoig8UNgJ3EDQB47eituYU0Bj";
+    @Value("${upbit.access-key}")
+    private final String accessKey;
+
+    @Value("${upbit.secret-key}")
+    private final String secretKey;
 
     @Test
     String getTickerTest() {

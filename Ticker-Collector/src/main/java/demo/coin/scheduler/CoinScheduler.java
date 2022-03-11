@@ -26,6 +26,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -54,8 +55,11 @@ public class CoinScheduler {
 
     private int todayStartMoney = -1;
 
-    private final String accessKey = "dPqjPTmcluZqUGGkQxwOZtNrnlHPCiAMOk3S2z6s";
-    private final String secretKey = "7C6CrYWkxnxnMSIGoig8UNgJ3EDQB47eituYU0Bj";
+    @Value("${upbit.access-key}")
+    private final String accessKey;
+
+    @Value("${upbit.secret-key}")
+    private final String secretKey;
 
     @Scheduled(cron = "0 30 0 * * *")
     public void makeOrder() throws Exception {

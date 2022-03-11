@@ -13,6 +13,10 @@ spring:
     hibernate:
       ddl-auto: update
 
+  profiles:
+    include:
+      - secret
+
 logging:
   level:
     root:
