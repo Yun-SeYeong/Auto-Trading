@@ -24,7 +24,6 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,11 +49,8 @@ public class BackTester {
     @Autowired
     ObjectMapper objectMapper;
 
-    @Value("${upbit.access-key}")
-    private final String accessKey;
-
-    @Value("${upbit.secret-key}")
-    private final String secretKey;
+    private final String accessKey = "";
+    private final String secretKey = "";
 
     @Test
     @Transactional

@@ -49,10 +49,10 @@ public class CoinHistoryServiceImpl implements CoinHistoryService{
 
 
     @Value("${upbit.access-key}")
-    private final String accessKey;
+    private String accessKey;
 
     @Value("${upbit.secret-key}")
-    private final String secretKey;
+    private String secretKey;
 
     String getTicker() throws ExecutionException, InterruptedException {
         WebClient client = WebClient.create("https://api.bithumb.com/public/ticker");

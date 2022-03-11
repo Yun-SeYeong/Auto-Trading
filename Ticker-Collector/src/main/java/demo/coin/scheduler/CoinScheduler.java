@@ -42,8 +42,8 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 @Component
-@RequiredArgsConstructor
 @Slf4j
+@RequiredArgsConstructor
 public class CoinScheduler {
     private final ObjectMapper objectMapper;
 
@@ -56,10 +56,10 @@ public class CoinScheduler {
     private int todayStartMoney = -1;
 
     @Value("${upbit.access-key}")
-    private final String accessKey;
+    private String accessKey;
 
     @Value("${upbit.secret-key}")
-    private final String secretKey;
+    private String secretKey;
 
     @Scheduled(cron = "0 30 0 * * *")
     public void makeOrder() throws Exception {
