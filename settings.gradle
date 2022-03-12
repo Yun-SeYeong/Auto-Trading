@@ -1,4 +1,5 @@
 rootProject.name = 'Auto-Trading'
 include 'Ticker-Collector'
 include 'BackTester'
+include 'Auto-Trading-System'
 
