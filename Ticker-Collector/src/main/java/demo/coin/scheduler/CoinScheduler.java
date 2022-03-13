@@ -36,6 +36,7 @@ import reactor.core.publisher.Mono;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.security.MessageDigest;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -123,7 +124,7 @@ public class CoinScheduler {
                 String coinName = ob.getMarket().replace("KRW-", "");
                 boolean isCoinBuy = checkCoin(balanceList, coinName);
 
-                int ma = 30;
+                int ma = 20;
 
                 List<MinuteCandle> minuteCandleList = getMinuteCandle(ob.getMarket(), ma);
                 BigDecimal ma10 = getMa(minuteCandleList, ma);
@@ -451,7 +452,9 @@ public class CoinScheduler {
             i++;
         }
 
-        ma = ma.divide(BigDecimal.valueOf(maNum));
+        System.out.println("ma = " + ma);
+
+        ma = ma.divide(BigDecimal.valueOf(maNum), RoundingMode.HALF_UP);
 
         //System.out.println("ma" + maNum + " = " + ma);
         return ma;
