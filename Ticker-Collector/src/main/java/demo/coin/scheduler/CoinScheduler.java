@@ -123,7 +123,7 @@ public class CoinScheduler {
                 String coinName = ob.getMarket().replace("KRW-", "");
                 boolean isCoinBuy = checkCoin(balanceList, coinName);
                 List<MinuteCandle> minuteCandleList = getMinuteCandle(ob.getMarket());
-                BigDecimal ma10 = getMa(minuteCandleList, 10);
+                BigDecimal ma10 = getMa(minuteCandleList, 60);
 
                 if (money > 0
                         && unit.getAskPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(0.995))) > 0
@@ -141,9 +141,9 @@ public class CoinScheduler {
                     break;
                 }
 
-                if (isCoinBuy && unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(1.07))) > 0) {
+                if (isCoinBuy && unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(1.10))) > 0) {
                     sendSlackHook(SlackMessage.builder()
-                            .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice() + "( 7% 이상 상승 )")
+                            .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice() + "( 10% 이상 상승 )")
                             .build());
 
                     sellCoin(ob.getMarket());
@@ -163,7 +163,7 @@ public class CoinScheduler {
                     break;
                 }
 
-                if (isCoinBuy && unit.getBidPrice().compareTo(ma10) < 0 && unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(0.985))) < 0) {
+                if (isCoinBuy && unit.getBidPrice().compareTo(ma10) < 0 && unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(0.99))) < 0) {
                     sendSlackHook(SlackMessage.builder()
                             .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice() + "( 이동평균선 이탈로 인한 손절 [ma10] )")
                             .build());
