@@ -133,6 +133,7 @@ public class CoinScheduler {
                         && unit.getAskPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(0.995))) > 0
                         && unit.getAskPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(1.005))) < 0
                         && unit.getAskPrice().compareTo(ma10) > 0
+                        && ma10.compareTo(targetMap.get(ob.getMarket()).getTargetPrice()) >= 0
                         && !isCoinBuy) {
 
                     sendSlackHook(SlackMessage.builder()
