@@ -127,8 +127,8 @@ public class CoinScheduler {
                 List<MinuteCandle> minuteCandleList = getMinuteCandle(ob.getMarket(), 15);
                 List<BigDecimal> maList = getMas(minuteCandleList);
                 BigDecimal ma5 = maList.get(0);
-                BigDecimal ma10 = maList.get(5);
-                BigDecimal ma15 = maList.get(15);
+                BigDecimal ma10 = maList.get(1);
+                BigDecimal ma15 = maList.get(2);
 
                 if (money > 0
                         && unit.getAskPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(0.995))) > 0
