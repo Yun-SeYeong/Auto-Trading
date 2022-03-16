@@ -125,9 +125,10 @@ public class CoinScheduler {
                 boolean isCoinBuy = checkCoin(balanceList, coinName);
 
                 List<MinuteCandle> minuteCandleList = getMinuteCandle(ob.getMarket(), 15);
-                BigDecimal ma5 = getMa(minuteCandleList, 5);
-                BigDecimal ma10 = getMa(minuteCandleList, 10);
-                BigDecimal ma15 = getMa(minuteCandleList, 15);
+                List<BigDecimal> maList = getMas(minuteCandleList);
+                BigDecimal ma5 = maList.get(0);
+                BigDecimal ma10 = maList.get(5);
+                BigDecimal ma15 = maList.get(15);
 
                 if (money > 0
                         && unit.getAskPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(0.995))) > 0
@@ -460,6 +461,25 @@ public class CoinScheduler {
 
         //System.out.println("ma" + maNum + " = " + ma);
         return ma;
+    }
+
+    List<BigDecimal> getMas(List<MinuteCandle> minuteCandleList) {
+        List<BigDecimal> decimalList = new ArrayList<>();
+
+        BigDecimal ma = BigDecimal.valueOf(0);
+
+        int i = 1;
+        for (MinuteCandle candle: minuteCandleList) {
+            ma = ma.add(candle.getTradePrice());
+
+            if (i % 5 == 0) {
+                decimalList.add(ma.divide(BigDecimal.valueOf(i), RoundingMode.HALF_UP));
+            }
+
+            i++;
+        }
+
+        return decimalList;
     }
 
     void sendLossMessage(double loss) {
