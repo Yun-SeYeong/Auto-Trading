@@ -131,9 +131,9 @@ public class CoinScheduler {
                 BigDecimal ma15 = maList.get(2);
 
                 if (money > 0
-                        && unit.getAskPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(0.995))) > 0
+                        && unit.getAskPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(0.998))) > 0
                         && unit.getAskPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(1.005))) < 0
-                        && unit.getAskPrice().compareTo(ma15) > 0
+                        && unit.getAskPrice().compareTo(ma15.multiply(BigDecimal.valueOf(1.001))) > 0
                         && ma15.compareTo(ma10) >= 0
                         && ma10.compareTo(ma5) >= 0
                         && !isCoinBuy) {
