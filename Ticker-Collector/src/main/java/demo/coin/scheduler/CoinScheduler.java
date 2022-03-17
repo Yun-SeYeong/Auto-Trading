@@ -424,7 +424,7 @@ public class CoinScheduler {
 
         Mono<String> candleMinuteMono = client.get()
                 .uri(uriBuilder -> uriBuilder
-                        .path("/candles/minutes/3")
+                        .path("/candles/minutes/1")
                         .queryParam("market", marketName)
                         .queryParam("count", count)
                         .build())
