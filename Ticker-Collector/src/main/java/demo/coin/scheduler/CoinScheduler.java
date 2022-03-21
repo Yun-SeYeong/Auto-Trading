@@ -73,7 +73,7 @@ public class CoinScheduler {
         checkCurrentBalance();
     }
 
-    @Scheduled(cron = "* * 1-23 * * *")
+    @Scheduled(cron = "0/3 * 1-23 * * *")
     public void checkMarket() throws Exception {
         WebClient client = WebClient.create("https://api.upbit.com/v1");
 
