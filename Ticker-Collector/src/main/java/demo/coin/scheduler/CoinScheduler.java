@@ -81,8 +81,8 @@ public class CoinScheduler {
 
         List<MarketOrder> marketOrderList = marketOrderRepository.findAllByCandleDateTimeUtc(lastDay.atStartOfDay());
 
-        if (marketOrderList.size() > 10) {
-            log.debug("[STEP1] get order complete");
+        if (marketOrderList.size() >= 10) {
+            log.info("[STEP1] get order complete");
 
             List<Balance> balanceList = getWallet();
 
@@ -94,7 +94,7 @@ public class CoinScheduler {
 
             money = money > 5000 ? money - 5000 : 0;
 
-            log.debug("[STEP2] get balance complete");
+            log.info("[STEP2] get balance complete");
 
             ///////////////////////////////////////////////////////////////////////////
 
@@ -120,7 +120,7 @@ public class CoinScheduler {
 
             ///////////////////////////////////////////////////////////////////////////
 
-            log.debug("[STEP3] get order book success");
+            log.info("[STEP3] get order book success");
 
             for (Orderbook ob : orderbookList) {
                 Orderbook.OrderbookUnit unit = ob.getOrderbookUnits().get(0);
@@ -196,15 +196,15 @@ public class CoinScheduler {
                     break;
                 }
 
-                log.debug("[STEP4] check price complete (" + ob.getMarket() + ")");
+                log.info("[STEP4] check price complete (" + ob.getMarket() + ")");
             }
         } else {
-            log.debug("[RECOVER] start");
+            log.info("[RECOVER] start");
             coinHistoryService.collectCoin();
             coinHistoryService.makeOrder();
-            log.debug("[RECOVER] end");
+            log.info("[RECOVER] end");
         }
-        log.debug("=====================================================");
+        log.info("=====================================================");
     }
 
     @Scheduled(cron = "0 0 0 * * *")
