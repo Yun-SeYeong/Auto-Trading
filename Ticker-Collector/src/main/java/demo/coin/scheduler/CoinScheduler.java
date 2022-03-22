@@ -73,7 +73,7 @@ public class CoinScheduler {
         checkCurrentBalance();
     }
 
-    @Scheduled(cron = "0/3 * 1-23 * * *")
+    @Scheduled(cron = "* * 1-23 * * *")
     public void checkMarket() throws Exception {
         WebClient client = WebClient.create("https://api.upbit.com/v1");
 
@@ -81,7 +81,9 @@ public class CoinScheduler {
 
         List<MarketOrder> marketOrderList = marketOrderRepository.findAllByCandleDateTimeUtc(lastDay.atStartOfDay());
 
-        if (marketOrderList.size() > 0) {
+        if (marketOrderList.size() > 10) {
+            log.debug("[STEP1] get order complete");
+
             List<Balance> balanceList = getWallet();
 
             int money = getKRWByBalances(balanceList);
@@ -92,6 +94,7 @@ public class CoinScheduler {
 
             money = money > 5000 ? money - 5000 : 0;
 
+            log.debug("[STEP2] get balance complete");
 
             ///////////////////////////////////////////////////////////////////////////
 
@@ -102,7 +105,6 @@ public class CoinScheduler {
                         UriBuilder builder = uriBuilder
                                 .path("/orderbook");
                         for (MarketOrder marketOrder : marketOrderList) {
-                            System.out.println("marketOrder = " + marketOrder);
                             builder.queryParam("markets", marketOrder.getMarket());
                             targetMap.put(marketOrder.getMarket(), marketOrder);
                         }
@@ -117,6 +119,8 @@ public class CoinScheduler {
             List<Orderbook> orderbookList = objectMapper.readValue(orderBook, new TypeReference<List<Orderbook>>() {});
 
             ///////////////////////////////////////////////////////////////////////////
+
+            log.debug("[STEP3] get order book success");
 
             for (Orderbook ob : orderbookList) {
                 Orderbook.OrderbookUnit unit = ob.getOrderbookUnits().get(0);
@@ -191,8 +195,16 @@ public class CoinScheduler {
                     checkCurrentBalance();
                     break;
                 }
+
+                log.debug("[STEP4] check price complete (" + ob.getMarket() + ")");
             }
+        } else {
+            log.debug("[RECOVER] start");
+            coinHistoryService.collectCoin();
+            coinHistoryService.makeOrder();
+            log.debug("[RECOVER] end");
         }
+        log.debug("=====================================================");
     }
 
     @Scheduled(cron = "0 0 0 * * *")
@@ -455,7 +467,7 @@ public class CoinScheduler {
             i++;
         }
 
-        System.out.println("ma = " + ma);
+//        System.out.println("ma = " + ma);
 
         ma = ma.divide(BigDecimal.valueOf(maNum), RoundingMode.HALF_UP);
 
