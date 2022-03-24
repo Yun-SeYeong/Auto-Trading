@@ -62,10 +62,10 @@ public class CoinScheduler {
     @Value("${upbit.secret-key}")
     private String secretKey;
 
-    @Scheduled(cron = "0 30 0 * * *")
-    public void makeOrder() throws Exception {
-        coinHistoryService.makeOrder();
-    }
+//    @Scheduled(cron = "0 30 0 * * *")
+//    public void makeOrder() throws Exception {
+//        coinHistoryService.makeOrder();
+//    }
 
     @Scheduled(cron = "0 0 0 * * *")
     public void sellCoins() throws Exception {
@@ -73,7 +73,7 @@ public class CoinScheduler {
         checkCurrentBalance();
     }
 
-    @Scheduled(cron = "* * 1-23 * * *")
+    @Scheduled(cron = "* * * * * *")
     public void checkMarket() throws Exception {
         WebClient client = WebClient.create("https://api.upbit.com/v1");
 
@@ -207,10 +207,10 @@ public class CoinScheduler {
         log.info("=====================================================");
     }
 
-    @Scheduled(cron = "0 0 0 * * *")
-    public void run() throws Exception{
-        coinHistoryService.collectCoin();
-    }
+//    @Scheduled(cron = "0 0 0 * * *")
+//    public void run() throws Exception{
+//        coinHistoryService.collectCoin();
+//    }
 
     void sendSlackHook(SlackMessage slackMessage) {
         WebClient webHookClient = WebClient.create("https://hooks.slack.com/services");

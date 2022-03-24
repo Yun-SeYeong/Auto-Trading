@@ -255,6 +255,11 @@ public class CoinHistoryServiceImpl implements CoinHistoryService{
 
         int i = 0;
         for (String marketName : marketNames) {
+
+            if (!marketName.startsWith("KRW-")) {
+                continue;
+            }
+
             Mono<String> candlesMono = client.get()
                     .uri(uriBuilder -> uriBuilder
                             .path("/candles/days")
