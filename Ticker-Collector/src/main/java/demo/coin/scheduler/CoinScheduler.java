@@ -128,11 +128,11 @@ public class CoinScheduler {
                 String coinName = ob.getMarket().replace("KRW-", "");
                 boolean isCoinBuy = checkCoin(balanceList, coinName);
 
-                List<MinuteCandle> minuteCandleList = getMinuteCandle(ob.getMarket(), 15);
+                List<MinuteCandle> minuteCandleList = getMinuteCandle(ob.getMarket(), 60);
                 List<BigDecimal> maList = getMas(minuteCandleList);
                 BigDecimal ma5 = maList.get(0);
                 BigDecimal ma10 = maList.get(1);
-                BigDecimal ma15 = maList.get(2);
+                BigDecimal ma15 = maList.get(11);
 
                 if (money > 0
                         && unit.getAskPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(0.998))) > 0
