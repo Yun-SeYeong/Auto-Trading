@@ -132,13 +132,15 @@ public class CoinScheduler {
                 List<BigDecimal> maList = getMas(minuteCandleList);
                 BigDecimal ma5 = maList.get(0);
                 BigDecimal ma10 = maList.get(1);
-                BigDecimal ma15 = maList.get(11);
+                BigDecimal ma15 = maList.get(2);
+                BigDecimal ma60 = maList.get(11);
 
                 if (money > 0
                         && unit.getAskPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(1.005))) < 0
                         && unit.getAskPrice().compareTo(ma15.multiply(BigDecimal.valueOf(1.001))) > 0
                         && ma5.compareTo(ma10) > 0
                         && ma10.compareTo(ma15) > 0
+                        && ma15.compareTo(ma60) > 0
                         && !isCoinBuy) {
 
                     sendSlackHook(SlackMessage.builder()
