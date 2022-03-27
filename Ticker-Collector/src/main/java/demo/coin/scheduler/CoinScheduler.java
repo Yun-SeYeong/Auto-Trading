@@ -135,8 +135,7 @@ public class CoinScheduler {
                 BigDecimal ma15 = maList.get(11);
 
                 if (money > 0
-                        && unit.getAskPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(0.998))) > 0
-                        && unit.getAskPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(1.003))) < 0
+                        && unit.getAskPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(1.005))) < 0
                         && unit.getAskPrice().compareTo(ma15.multiply(BigDecimal.valueOf(1.001))) > 0
                         && ma5.compareTo(ma10) > 0
                         && ma10.compareTo(ma15) > 0
@@ -185,7 +184,7 @@ public class CoinScheduler {
                     break;
                 }
 
-                if (isCoinBuy && unit.getBidPrice().compareTo(ma15) < 0 && unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(1.003))) > 0) {
+                if (isCoinBuy && unit.getBidPrice().compareTo(ma15) < 0 && unit.getBidPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(1.005))) > 0) {
                     sendSlackHook(SlackMessage.builder()
                             .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice() + "( 이동평균선 이탈로 인한 익절 [ma10] )")
                             .build());
