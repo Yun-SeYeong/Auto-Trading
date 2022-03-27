@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -242,48 +243,58 @@ public class CoinHistoryServiceImpl implements CoinHistoryService{
 
     }
 
-    public void collectCoin() throws Exception {
+    public void collectCoin() {
         log.info("Collecting start...");
 
         sendSlackHook(SlackMessage.builder()
                 .text("Start collecting...")
                 .build());
 
-        List<String> marketNames = getMarketName();
+        List<String> marketNames = null;
+        try {
+            marketNames = getMarketName();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         WebClient client = WebClient.create("https://api.upbit.com/v1");
 
         int i = 0;
         for (String marketName : marketNames) {
+            i++;
 
-            if (!marketName.startsWith("KRW-")) {
-                continue;
-            }
+            try{
+                Mono<String> candlesMono = client.get()
+                        .uri(uriBuilder -> uriBuilder
+                                .path("/candles/days")
+                                .queryParam("market", marketName)
+                                .queryParam("count", 2)
+                                .build())
+                        .retrieve()
+                        .bodyToMono(String.class);
 
-            Mono<String> candlesMono = client.get()
-                    .uri(uriBuilder -> uriBuilder
-                            .path("/candles/days")
-                            .queryParam("market", marketName)
-                            .queryParam("count", 2)
-                            .build())
-                    .retrieve()
-                    .bodyToMono(String.class);
-
-            String candles = candlesMono.toFuture().get();
+                String candles = candlesMono.toFuture().get();
 
 //            log.debug("candles = " + candles);
-            sendSlackHook(SlackMessage.builder()
-                    .text("[COLLECT] COIN:" + marketName + " (" + i + "/" + marketNames.size() + ")[" + ((int) (((double) i/marketNames.size())*100)) + "%]")
-                    .build());
+                sendSlackHook(SlackMessage.builder()
+                        .text("[COLLECT] COIN:" + marketName + " (" + i + "/" + marketNames.size() + ")[" + ((int) (((double) i/marketNames.size())*100)) + "%]")
+                        .build());
 
-            List<DayCandle> dayCandleList = objectMapper.readValue(candles, new TypeReference<List<DayCandle>>() {});
+                List<DayCandle> dayCandleList = objectMapper.readValue(candles, new TypeReference<List<DayCandle>>() {});
 
-            dayCandleList.remove(dayCandleList.get(0));
+                dayCandleList.remove(dayCandleList.get(0));
 
-            dayCandleRepository.saveAll(dayCandleList);
+                dayCandleRepository.saveAll(dayCandleList);
 
-            Thread.sleep(1000);
-            i++;
+                Thread.sleep(500);
+            } catch (Exception e) {
+                sendSlackHook(SlackMessage.builder()
+                        .text("[FAIL] COIN:" + marketName + " (" + i + "/" + marketNames.size() + ")[" + ((int) (((double) i/marketNames.size())*100)) + "%]")
+                        .build());
+            }
+
         }
 
         log.info("Collecting success!");
@@ -307,6 +318,8 @@ public class CoinHistoryServiceImpl implements CoinHistoryService{
 
         List<String> nameList = JsonPath.read(coinNames, "$.*.market");
         //System.out.println("nameList = " + nameList);
+
+        nameList = nameList.stream().filter(market -> market.startsWith("KRW")).collect(Collectors.toList());
 
         return nameList;
     }
