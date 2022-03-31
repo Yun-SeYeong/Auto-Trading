@@ -128,19 +128,19 @@ public class CoinScheduler {
                 String coinName = ob.getMarket().replace("KRW-", "");
                 boolean isCoinBuy = checkCoin(balanceList, coinName);
 
-                List<MinuteCandle> minuteCandleList = getMinuteCandle(ob.getMarket(), 60);
+                List<MinuteCandle> minuteCandleList = getMinuteCandle(ob.getMarket(), 120);
                 List<BigDecimal> maList = getMas(minuteCandleList);
                 BigDecimal ma5 = maList.get(0);
                 BigDecimal ma10 = maList.get(1);
                 BigDecimal ma15 = maList.get(2);
                 BigDecimal ma60 = maList.get(11);
+                BigDecimal ma120 = maList.get(23);
 
                 if (money >= 10000
-//                        && unit.getAskPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice().multiply(BigDecimal.valueOf(1.005))) < 0
-//                        && unit.getAskPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice()) > 0
                         && ma5.compareTo(ma10) > 0
                         && ma10.compareTo(ma15) > 0
                         && ma15.compareTo(ma60) > 0
+                        && ma60.compareTo(ma120) > 0
                         && !isCoinBuy) {
 
                     sendSlackHook(SlackMessage.builder()
@@ -152,28 +152,6 @@ public class CoinScheduler {
                     marketOrderRepository.save(targetMap.get(ob.getMarket()));
                     break;
                 }
-
-//                if (isCoinBuy && unit.getBidPrice().compareTo(getCoinByBalances(balanceList, coinName).multiply(BigDecimal.valueOf(1.30))) > 0) {
-//                    sendSlackHook(SlackMessage.builder()
-//                            .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice() + "( 30% 이상 상승 )")
-//                            .build());
-//
-//                    sellCoin(ob.getMarket());
-//
-//                    checkCurrentBalance();
-//                    break;
-//                }
-//
-//                if (isCoinBuy && unit.getBidPrice().compareTo(getCoinByBalances(balanceList, coinName).multiply(BigDecimal.valueOf(0.97))) < 0) {
-//                    sendSlackHook(SlackMessage.builder()
-//                            .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice() + "( 3% 이상 하락 )")
-//                            .build());
-//
-//                    sellCoin(ob.getMarket());
-//
-//                    checkCurrentBalance();
-//                    break;
-//                }
 
                 if (isCoinBuy && unit.getBidPrice().compareTo(ma15) < 0
                         && unit.getBidPrice().compareTo(getCoinByBalances(balanceList, coinName).multiply(BigDecimal.valueOf(0.985))) < 0
@@ -191,7 +169,8 @@ public class CoinScheduler {
 
                 if (isCoinBuy
                         && unit.getBidPrice().compareTo(ma15) < 0
-                        && unit.getBidPrice().compareTo(getCoinByBalances(balanceList, coinName).multiply(BigDecimal.valueOf(1.005))) > 0) {
+                        && unit.getBidPrice().compareTo(getCoinByBalances(balanceList, coinName).multiply(BigDecimal.valueOf(1.005))) > 0
+                        && ma10.compareTo(ma5) > 0) {
                     sendSlackHook(SlackMessage.builder()
                             .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice() + "( 이동평균선 이탈로 인한 익절 [ma15] )")
                             .build());
