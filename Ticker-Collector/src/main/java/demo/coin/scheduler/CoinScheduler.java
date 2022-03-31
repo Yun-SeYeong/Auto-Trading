@@ -155,7 +155,6 @@ public class CoinScheduler {
 
                 if (isCoinBuy && unit.getBidPrice().compareTo(ma15) < 0
                         && unit.getBidPrice().compareTo(getCoinByBalances(balanceList, coinName).multiply(BigDecimal.valueOf(0.985))) < 0
-                        && ma60.compareTo(ma5) > 0
                         && ma10.compareTo(ma5) > 0) {
                     sendSlackHook(SlackMessage.builder()
                             .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice() + "( 이동평균선 이탈로 인한 손절 [ma15] )")
