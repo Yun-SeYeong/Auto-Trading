@@ -128,7 +128,7 @@ public class CoinScheduler {
                 String coinName = ob.getMarket().replace("KRW-", "");
                 boolean isCoinBuy = checkCoin(balanceList, coinName);
 
-                List<MinuteCandle> minuteCandleList = getMinuteCandle(ob.getMarket(), 120);
+                List<MinuteCandle> minuteCandleList = getMinuteCandle(ob.getMarket(), 120,3);
                 List<BigDecimal> maList = getMas(minuteCandleList);
                 BigDecimal ma5 = maList.get(0);
                 BigDecimal ma10 = maList.get(1);
@@ -137,6 +137,7 @@ public class CoinScheduler {
                 BigDecimal ma120 = maList.get(23);
 
                 if (money >= 10000
+                        && unit.getAskPrice().compareTo(targetMap.get(ob.getMarket()).getTargetPrice()) > 0
                         && ma5.compareTo(ma10) > 0
                         && ma10.compareTo(ma15) > 0
                         && ma15.compareTo(ma60) > 0
@@ -427,12 +428,12 @@ public class CoinScheduler {
         return String.join("&", queryElements.toArray(new String[0]));
     }
 
-    List<MinuteCandle> getMinuteCandle(String marketName, int count) throws JsonProcessingException {
+    List<MinuteCandle> getMinuteCandle(String marketName, int count, int unit) throws JsonProcessingException {
         WebClient client = WebClient.create("https://api.upbit.com/v1");
 
         Mono<String> candleMinuteMono = client.get()
                 .uri(uriBuilder -> uriBuilder
-                        .path("/candles/minutes/3")
+                        .path("/candles/minutes/" + unit)
                         .queryParam("market", marketName)
                         .queryParam("count", count)
                         .build())
