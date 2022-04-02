@@ -137,7 +137,7 @@ public class CoinScheduler {
                 BigDecimal ma120 = maList.get(23);
 
                 if (money >= 10000
-                        && ma5.compareTo(ma10) > 0
+                        && ma5.compareTo(ma10.multiply(new BigDecimal("1.001"))) > 0
                         && ma10.compareTo(ma20) > 0
                         && ma20.compareTo(ma60) > 0
                         && ma60.compareTo(ma120) > 0
