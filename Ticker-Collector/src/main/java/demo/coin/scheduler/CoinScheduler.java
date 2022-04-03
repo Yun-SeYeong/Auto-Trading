@@ -136,8 +136,16 @@ public class CoinScheduler {
                 BigDecimal ma60 = maList.get(11);
                 BigDecimal ma120 = maList.get(23);
 
+                minuteCandleList.remove(0);
+                List<BigDecimal> lastMaList = getMas(minuteCandleList);
+                BigDecimal lastMa5 = lastMaList.get(0);
+                BigDecimal lastMa10 = lastMaList.get(1);
+                BigDecimal lastMa20 = lastMaList.get(3);
+                BigDecimal lastMa60 = lastMaList.get(11);
+
                 if (money >= 10000
-                        && ma5.compareTo(ma10.multiply(new BigDecimal("1.001"))) > 0
+                        && lastMa10.compareTo(lastMa5) > 0
+                        && ma5.compareTo(ma10) > 0
                         && ma10.compareTo(ma20) > 0
                         && ma20.compareTo(ma60) > 0
                         && ma60.compareTo(ma120) > 0
