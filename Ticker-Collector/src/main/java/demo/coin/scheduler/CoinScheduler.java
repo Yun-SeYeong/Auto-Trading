@@ -144,7 +144,7 @@ public class CoinScheduler {
                 BigDecimal lastMa60 = lastMaList.get(11);
 
                 if (money >= 10000
-                        && lastMa10.compareTo(lastMa5) > 0
+                        && (lastMa10.compareTo(lastMa5) > 0 || lastMa20.compareTo(lastMa10) > 0 || lastMa60.compareTo(lastMa20) > 0)
                         && ma5.compareTo(ma10) > 0
                         && ma10.compareTo(ma20) > 0
                         && ma20.compareTo(ma60) > 0
