@@ -163,7 +163,10 @@ public class CoinScheduler {
 
                 if (isCoinBuy
                         && unit.getBidPrice().compareTo(getCoinByBalances(balanceList, coinName).multiply(BigDecimal.valueOf(0.995))) < 0
-                        && (ma10.compareTo(ma5) > 0 || ma20.compareTo(ma5) > 0 || ma60.compareTo(ma5) > 0 || ma120.compareTo(ma5) > 0)) {
+                        && (ma10.compareTo(ma5.multiply(BigDecimal.valueOf(1.001))) > 0
+                            || ma20.compareTo(ma5.multiply(BigDecimal.valueOf(1.001))) > 0
+                            || ma60.compareTo(ma5.multiply(BigDecimal.valueOf(1.001))) > 0
+                            || ma120.compareTo(ma5.multiply(BigDecimal.valueOf(1.001))) > 0)) {
                     sendSlackHook(SlackMessage.builder()
                             .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice() + "( 이동평균선 이탈로 인한 손절 [ma15] )")
                             .build());
