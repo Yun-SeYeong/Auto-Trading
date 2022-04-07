@@ -178,7 +178,7 @@ public class CoinScheduler {
                 }
 
                 if (isCoinBuy
-                        && unit.getBidPrice().compareTo(getCoinByBalances(balanceList, coinName).multiply(BigDecimal.valueOf(1.005))) > 0
+//                        && unit.getBidPrice().compareTo(getCoinByBalances(balanceList, coinName).multiply(BigDecimal.valueOf(1.005))) > 0
                         && (ma10.compareTo(ma5) > 0 || ma20.compareTo(ma5) > 0 || ma60.compareTo(ma5) > 0 || ma120.compareTo(ma5) > 0)) {
                     sendSlackHook(SlackMessage.builder()
                             .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice() + "( 이동평균선 이탈로 인한 익절 [ma15] )")
