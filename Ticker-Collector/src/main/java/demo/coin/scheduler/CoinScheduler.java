@@ -128,7 +128,7 @@ public class CoinScheduler {
                 String coinName = ob.getMarket().replace("KRW-", "");
                 boolean isCoinBuy = checkCoin(balanceList, coinName);
 
-                List<MinuteCandle> minuteCandleList = getMinuteCandle(ob.getMarket(), 122,3);
+                List<MinuteCandle> minuteCandleList = getMinuteCandle(ob.getMarket(), 122,5);
                 List<BigDecimal> maList = getMas(minuteCandleList);
                 BigDecimal ma5 = maList.get(0);
                 BigDecimal ma10 = maList.get(1);
@@ -174,7 +174,6 @@ public class CoinScheduler {
                 }
 
                 if (isCoinBuy
-                        && unit.getBidPrice().compareTo(ma5) < 0
                         && (ma10.compareTo(ma5) > 0 || ma20.compareTo(ma5) > 0 || ma60.compareTo(ma5) > 0 || ma120.compareTo(ma5) > 0)) {
                     sendSlackHook(SlackMessage.builder()
                             .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice() + "( 이동평균선 이탈로 인한 손절 [ma15] )")
