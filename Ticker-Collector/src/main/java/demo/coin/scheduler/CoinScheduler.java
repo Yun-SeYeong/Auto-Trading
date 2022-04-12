@@ -128,7 +128,7 @@ public class CoinScheduler {
                 String coinName = ob.getMarket().replace("KRW-", "");
                 boolean isCoinBuy = checkCoin(balanceList, coinName);
 
-                List<MinuteCandle> minuteCandleList = getMinuteCandle(ob.getMarket(), 120,30);
+                List<MinuteCandle> minuteCandleList = getMinuteCandle(ob.getMarket(), 122,3);
                 List<BigDecimal> maList = getMas(minuteCandleList);
                 BigDecimal ma5 = maList.get(0);
                 BigDecimal ma10 = maList.get(1);
@@ -143,8 +143,20 @@ public class CoinScheduler {
                 BigDecimal lastMa20 = lastMaList.get(3);
                 BigDecimal lastMa60 = lastMaList.get(11);
 
+                minuteCandleList.remove(0);
+                List<BigDecimal> last2MaList = getMas(minuteCandleList);
+                BigDecimal last2Ma5 = last2MaList.get(0);
+                BigDecimal last2Ma10 = last2MaList.get(1);
+                BigDecimal last2Ma20 = last2MaList.get(3);
+                BigDecimal last2Ma60 = last2MaList.get(11);
+
                 if (money >= 10000
-                        && (lastMa10.compareTo(lastMa5) > 0 || lastMa20.compareTo(lastMa10) > 0 || lastMa60.compareTo(lastMa20) > 0)
+                        && (last2Ma10.compareTo(last2Ma5) > 0 || last2Ma20.compareTo(last2Ma10) > 0 || last2Ma60.compareTo(last2Ma20) > 0)
+
+                        && lastMa5.compareTo(lastMa10.multiply(BigDecimal.valueOf(1.001))) > 0
+                        && lastMa10.compareTo(lastMa20.multiply(BigDecimal.valueOf(1.001))) > 0
+                        && lastMa20.compareTo(lastMa60.multiply(BigDecimal.valueOf(1.001))) > 0
+
                         && ma5.compareTo(ma10.multiply(BigDecimal.valueOf(1.001))) > 0
                         && ma10.compareTo(ma20.multiply(BigDecimal.valueOf(1.001))) > 0
                         && ma20.compareTo(ma60.multiply(BigDecimal.valueOf(1.001))) > 0
@@ -161,12 +173,7 @@ public class CoinScheduler {
                     break;
                 }
 
-                if (isCoinBuy
-                        && unit.getBidPrice().compareTo(getCoinByBalances(balanceList, coinName).multiply(BigDecimal.valueOf(0.995))) < 0
-                        && (ma10.compareTo(ma5.multiply(BigDecimal.valueOf(1.001))) > 0
-                            || ma20.compareTo(ma5.multiply(BigDecimal.valueOf(1.001))) > 0
-                            || ma60.compareTo(ma5.multiply(BigDecimal.valueOf(1.001))) > 0
-                            || ma120.compareTo(ma5.multiply(BigDecimal.valueOf(1.001))) > 0)) {
+                if (isCoinBuy && unit.getBidPrice().compareTo(ma5) < 0) {
                     sendSlackHook(SlackMessage.builder()
                             .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice() + "( 이동평균선 이탈로 인한 손절 [ma15] )")
                             .build());
@@ -176,19 +183,19 @@ public class CoinScheduler {
                     checkCurrentBalance();
                     break;
                 }
-
-                if (isCoinBuy
-//                        && unit.getBidPrice().compareTo(getCoinByBalances(balanceList, coinName).multiply(BigDecimal.valueOf(1.005))) > 0
-                        && (ma10.compareTo(ma5) > 0 || ma20.compareTo(ma5) > 0 || ma60.compareTo(ma5) > 0 || ma120.compareTo(ma5) > 0)) {
-                    sendSlackHook(SlackMessage.builder()
-                            .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice() + "( 이동평균선 이탈로 인한 익절 [ma15] )")
-                            .build());
-
-                    sellCoin(ob.getMarket());
-
-                    checkCurrentBalance();
-                    break;
-                }
+//
+//                if (isCoinBuy
+////                        && unit.getBidPrice().compareTo(getCoinByBalances(balanceList, coinName).multiply(BigDecimal.valueOf(1.005))) > 0
+//                        && (ma10.compareTo(ma5) > 0 || ma20.compareTo(ma5) > 0 || ma60.compareTo(ma5) > 0 || ma120.compareTo(ma5) > 0)) {
+//                    sendSlackHook(SlackMessage.builder()
+//                            .text("[매도] Coin: " + ob.getMarket() + " Price: " + unit.getBidPrice() + "( 이동평균선 이탈로 인한 익절 [ma15] )")
+//                            .build());
+//
+//                    sellCoin(ob.getMarket());
+//
+//                    checkCurrentBalance();
+//                    break;
+//                }
 
                 log.info("[STEP4] check price complete (" + ob.getMarket() + ")");
             }
